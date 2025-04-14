@@ -55,11 +55,31 @@ This architecture decouples synchronous API request handling from backend proces
 
 This pattern is backend-agnostic and supports various queue implementations such as Redis, Kafka, RabbitMQ, etc.
 
-## Implementation Details (Redis based Queue)
+## Implementation Details (Redis Queue)
 
-This PoC uses **Redis** to implement the abstract queue described above.
+The current implementation uses **Go** for the REST service and **Redis** as the queue mechanism.
 
-### Key Mechanisms:
+### Go REST API
+
+The REST layer is written in **Go**, leveraging its lightweight **goroutines** and non-blocking I/O model. This makes it highly efficient at handling large numbers of concurrent requests — particularly useful in this pattern, where each client connection may be held open while waiting for a result from the worker.
+
+### Queue Backend
+
+This PoC uses **Redis lists** to implement the queuing mechanism. Redis was chosen for its simplicity and low-latency blocking operations (`BLPOP`, `RPUSH`), which align well with the sync-to-async message flow.
+
+However, the system is designed in an abstracted way that allows replacing Redis with other queueing systems such as:
+
+- **Kafka** (via keyed topics or headers)
+- **RabbitMQ** (using reply queues and `correlation_id`)
+- **Amazon SQS**, **NATS**, etc.
+
+The only requirement is support for:
+
+- Enqueueing jobs
+- Blocking consumption
+- Response routing based on request ID
+
+### Redis Flow
 
 | Action                  | Redis Command                          | Key Pattern                           |
 |-------------------------|-----------------------------------------|----------------------------------------|
