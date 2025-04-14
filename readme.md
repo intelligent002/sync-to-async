@@ -67,9 +67,6 @@ This PoC uses **Redis** to implement the abstract queue described above.
 | Worker fetch job        | `BLPOP validate:queue`                  | Blocking consumer                      |
 | Push result             | `RPUSH validate:response:<request_id>`  | One key per request                    |
 | REST wait for result    | `BLPOP validate:response:<request_id>`  | Blocking until worker replies          |
-| Optional cleanup        | `EXPIRE` + `DEL`                        | Avoids memory leaks for stale results  |
-
----
 
 ## Setup & Deployment
 
