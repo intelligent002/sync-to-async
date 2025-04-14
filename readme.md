@@ -55,7 +55,7 @@ This architecture decouples synchronous API request handling from backend proces
 
 This pattern is backend-agnostic and supports various queue implementations such as Redis, Kafka, RabbitMQ, etc.
 
-## Implementation Details (Redis Queue)
+## Implementation Details
 
 The current implementation uses **Go** for the REST service and **Redis** as the queue mechanism.
 
