@@ -1,1 +1,1 @@
-docker stack deploy -c .\docker-swarm.yml sync-to-async --detach=false
+docker stack deploy -c docker-swarm.yml sync-to-async --detach=false

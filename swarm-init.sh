@@ -1,1 +1,1 @@
-swarm init
+docker swarm init
