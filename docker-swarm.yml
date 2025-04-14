@@ -1,0 +1,108 @@
+networks:
+  sync-to-async:
+    driver: overlay
+
+volumes:
+  prometheus-data:
+  grafana-data:
+
+services:
+
+  traefik:
+    image: traefik:v3.3
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedByDefault=false"
+      - "--entrypoints.web.address=:3000"
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+    ports:
+      - "3000:3000"   # Public REST access
+      - "8080:8080"   # Traefik dashboard
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      - sync-to-async
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+
+  rest:
+    image: rest:latest
+    labels:
+      - "metrics=true"
+      - "traefik.enable=true"
+      - "traefik.http.routers.rest.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.rest.entrypoints=web"
+      - "traefik.http.services.rest.loadbalancer.server.port=3000"
+    networks:
+      - sync-to-async
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: any
+
+  redis:
+    image: redis:7
+    labels:
+      - "traefik.enable=false"
+    networks:
+      - sync-to-async
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+
+  worker:
+    image: worker:latest
+    labels:
+      - "traefik.enable=false"
+    networks:
+      - sync-to-async
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: any
+
+  prometheus:
+    image: prom/prometheus:latest
+    labels:
+      - "traefik.enable=false"
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - sync-to-async
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+
+  grafana:
+    image: grafana/grafana:latest
+    labels:
+      - "traefik.enable=false"
+    depends_on:
+      - prometheus
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=very-secret
+      - GF_USERS_DEFAULT_THEME=light
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 3s
+    ports:
+      - "3001:3000"
+    networks:
+      - sync-to-async
+    volumes:
+      - grafana-data:/var/lib/grafana
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
