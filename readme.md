@@ -170,4 +170,50 @@ Leave Swarm mode:
 ```bash
    ./swarm-leave.sh
 ```
- 
+
+## Access the Deployment
+
+Once the stack is deployed, the following services will be available:
+
+| Service     | URL                                 | Description                                            |
+|-------------|--------------------------------------|--------------------------------------------------------|
+| REST API    | [http://localhost:3000](http://localhost:3000)             | Main entrypoint for issuing requests to the POC        |
+| Prometheus  | [http://localhost:9090](http://localhost:9090)             | Metrics collection and query engine                    |
+| Grafana     | [http://localhost:3001](http://localhost:3001)             | Metrics dashboard (credentials: `admin / very-secret`) |
+| Traefik     | [http://localhost:8080](http://localhost:8080)             | Traefik dashboard and routing debug panel              |
+
+Example API request:
+
+```bash
+   curl "http://localhost:3000/validate?content=test"
+```
+
+Example API response:
+
+```jsonc
+{
+    "request_id": "69281e0d-a5e5-4136-af9c-e1dec6e4787b",   // Unique identifier assigned to the request (used for tracing).
+    "meta": {
+        "proxy_request_received_ns":   1744645157689149983, // When the REST service first received the request.
+        "proxy_request_pushed_ns":     1744645157689161384, // When the job was pushed into the queue.
+        "worker_request_pulled_ns":    1744645157689906528, // When the worker pulled the job from the queue.
+        "worker_response_pushed_ns":   1744645157689910728, // When the worker pushed the result back into the queue.
+        "proxy_response_pulled_ns":    1744645157690571568, // When the REST service pulled the result to respond to the client.
+        "proxy_roundtrip_duration_ns": 1421585              // Full round-trip duration (from receive to response), in nanoseconds.
+    },
+    "data": {
+        "content": "BALAGAN",
+        "result": true
+    }
+}
+```
+
+## Limitations and Out-of-Scope Items
+
+This Proof of Concept is focused on demonstrating the core sync-to-async architecture. The following features are intentionally omitted:
+
+- **Redis is used in standalone mode** – No clustering, replication, or high-availability setup.
+- **No retry logic** – Failed worker executions are not retried.
+- **No dead-letter queue** – Expired or dropped jobs are not captured for later inspection.
+- **No authentication or rate limiting** – The REST API is open and unauthenticated.
+- **No QoS or priority handling** – Queue prioritization, SLA routing, and autoscaling by metrics are not implemented.
