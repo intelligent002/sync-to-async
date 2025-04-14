@@ -42,7 +42,7 @@ Incoming requests are enqueued and processed asynchronously, while the REST laye
 
 The diagram below illustrates the full lifecycle of a request in the sync-to-async system:
 
-![Sync-to-Async Flow](https://raw.githubusercontent.com/intelligent002/sync-to-async/refs/heads/main/charts/flow.png?token=GHSAT0AAAAAACKX6JA3NC3ABEQEW4SKIARWZ75NGRQ)
+![Sync-to-Async Flow](https://raw.githubusercontent.com/intelligent002/sync-to-async/refs/heads/main/charts/flow.png)
 
 ### Flow Description:
 
