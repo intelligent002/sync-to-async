@@ -1,6 +1,7 @@
 networks:
   sync-to-async:
     driver: overlay
+    external: true
 
 volumes:
   prometheus-data:
