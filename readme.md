@@ -202,8 +202,8 @@ Example API response:
         "proxy_roundtrip_duration_ns": 1421585              // Full round-trip duration (from receive to response), in nanoseconds.
     },
     "data": {
-        "content": "BALAGAN",
-        "result": true
+        "content": "BALAGAN",                               // Returned result - uppercase of the input.
+        "result": true                                      // Result/Error indication.
     }
 }
 ```
