@@ -59,13 +59,25 @@ This pattern is backend-agnostic and supports various queue implementations such
 
 The current implementation uses **Go** for the REST service and **Redis** as the queue mechanism.
 
-### Go REST API
+### REST API – Go
 
-The REST layer is written in **Go**, leveraging its lightweight **goroutines** and non-blocking I/O model. This makes it highly efficient at handling large numbers of concurrent requests — particularly useful in this pattern, where each client connection may be held open while waiting for a result from the worker.
+The REST layer is implemented in **Go**, taking advantage of its lightweight **goroutines** and non-blocking I/O model.
 
-### Queue Backend
+This makes it particularly well-suited for scenarios where many client connections may remain open simultaneously — as each REST instance can efficiently hold thousands of waiting connections without incurring the heavy overhead of traditional threads.
 
-This PoC uses **Redis lists** to implement the queuing mechanism. Redis was chosen for its simplicity and low-latency blocking operations (`BLPOP`, `RPUSH`), which align well with the sync-to-async message flow.
+In this architecture, the REST service receives a request, enqueues it into the queue, and then asynchronously waits for the corresponding result — all while keeping the client connection open in a resource-efficient way.
+
+---
+
+### Queue – Redis
+
+This PoC uses **Redis lists** as the queuing mechanism.  
+
+Redis was selected for its simplicity, speed, and support for **blocking list operations** (`BLPOP`, `RPUSH`), which are ideal for implementing the core sync-to-async messaging flow.
+
+Each incoming job is pushed to a central queue, and a worker consumes it using `BLPOP`. The worker then publishes the result back to a dedicated key associated with the original request ID.
+
+To prevent stale data accumulation (e.g. due to dropped clients), each result key is assigned a **TTL (time-to-live)** using the `EXPIRE` command. This ensures that even if the REST service disconnects or crashes, the result will be automatically cleaned up after a configurable retention period (default: 1 hour).
 
 However, the system is designed in an abstracted way that allows replacing Redis with other queueing systems such as:
 
@@ -90,10 +102,74 @@ The only requirement is support for:
 
 ## Setup & Deployment
 
-### Requirements:
+### Requirements
 
-- Docker & Docker Compose or Docker Swarm
-- Redis
-- Go (for manual testing/debug builds)
-- Prometheus (optional)
-- Grafana (optional)
+- Docker & Docker Swarm
+- Internet access to pull base images
+
+### Why Docker Swarm?
+
+This PoC uses **Docker Swarm** instead of plain Docker Compose for the following reason:
+
+- **Prometheus DNS-based Service Discovery**  
+  Swarm enables Prometheus to discover container replicas dynamically via internal DNS (e.g. `tasks.rest`), which is **not supported in Compose**. This is essential for collecting metrics from all running REST instances:
+  
+  ```yaml
+  # prometheus/prometheus.yml
+  
+  - job_name: 'rest'
+    dns_sd_configs:
+      - names: ['tasks.rest']
+        type: A
+        port: 3000
+
+The following base images needed:
+
+- `traefik:v3.3` – used as the reverse proxy and load balancer
+- `golang:1.24.2-alpine3.21` – for building the REST and Worker services
+- `redis:7` – used as the message queue
+- `prom/prometheus:v2.53.4` – metrics collection
+- `grafana/grafana:11.6.0` – metrics visualization
+
+## Deployment
+
+### 1. Initialize Docker Swarm
+Enabling Docker Swarm mode activates additional orchestration features on your local Docker environment, such as service scaling, load balancing, and DNS-based service discovery.
+  ```bash
+  ./swarm-init.sh
+```
+
+### 2. Create the external network
+The external overlay network is created once and reused. This is to avoid issues from Docker’s async network operations, such as race conditions or leftover resources.
+```bash
+  ./network-create.sh
+```
+
+### 3. Build & Deploy
+After making changes to the source code (e.g. REST or Worker services), you can rebuild and redeploy the updated containers using:
+```bash
+   ./containers-build.sh
+```
+```bash
+   ./stack-deploy.sh
+```
+
+### 4. Cleanup
+
+To fully reset the environment or free up space from unused resources:
+
+Remove the stack:
+```bash
+   ./stack-remove.sh
+```
+
+Remove the network:
+```bash
+   ./network-remove.sh
+```
+
+Leave Swarm mode:
+```bash
+   ./swarm-leave.sh
+```
+ 
