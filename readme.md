@@ -91,12 +91,12 @@ The only requirement is support for:
 
 ### Redis Flow
 
-| Action                  | Redis Command                          | Key Pattern                           |
-|-------------------------|-----------------------------------------|----------------------------------------|
-| Enqueue job             | `RPUSH validate:queue`                  | Shared job queue                       |
-| Worker fetch job        | `BLPOP validate:queue`                  | Blocking consumer                      |
-| Push result             | `RPUSH validate:response:<request_id>`  | One key per request                    |
-| REST wait for result    | `BLPOP validate:response:<request_id>`  | Blocking until worker replies          |
+| Action               | Redis Command                          | Key Pattern                   |
+|----------------------|----------------------------------------|-------------------------------|
+| Enqueue job          | `RPUSH validate:queue`                 | Shared job queue              |
+| Worker fetch job     | `BLPOP validate:queue`                 | Blocking consumer             |
+| Push result          | `RPUSH validate:response:<request_id>` | One key per request           |
+| REST wait for result | `BLPOP validate:response:<request_id>` | Blocking until worker replies |
 
 ## Setup & Deployment
 
@@ -175,12 +175,12 @@ Leave Swarm mode:
 
 Once the stack is deployed, the following services will be available:
 
-| Service     | URL                                 | Description                                            |
-|-------------|--------------------------------------|--------------------------------------------------------|
-| REST API    | [http://localhost:3000](http://localhost:3000)             | Main entrypoint for issuing requests to the POC        |
-| Prometheus  | [http://localhost:9090](http://localhost:9090)             | Metrics collection and query engine                    |
-| Grafana     | [http://localhost:3001](http://localhost:3001)             | Metrics dashboard (credentials: `admin / very-secret`) |
-| Traefik     | [http://localhost:8080](http://localhost:8080)             | Traefik dashboard and routing debug panel              |
+| Service    | URL                                            | Description                                            |
+|------------|------------------------------------------------|--------------------------------------------------------|
+| REST API   | [http://localhost:3000](http://localhost:3000) | Main entrypoint for issuing requests to the POC        |
+| Prometheus | [http://localhost:9090](http://localhost:9090) | Metrics collection and query engine                    |
+| Grafana    | [http://localhost:3001](http://localhost:3001) | Metrics dashboard (credentials: `admin / very-secret`) |
+| Traefik    | [http://localhost:8080](http://localhost:8080) | Traefik dashboard and routing debug panel              |
 
 Example API request:
 
