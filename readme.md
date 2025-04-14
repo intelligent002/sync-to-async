@@ -15,7 +15,13 @@ It addresses the limitations of traditional worker-based systems that rely solel
 
 This architecture decouples the request buffering from processing. It introduces a centralized queue between the REST layer and the workers, enabling fine-grained control, scalability, and reliability — while still maintaining a synchronous response model.
 
-The system consists of a pool of REST API servers, a centralized queue, and a set of asynchronous workers. Incoming requests are enqueued and processed in the background, while the REST layer synchronously waits for and returns the final result.
+### The system consists of:
+
+1. Scalable pool of REST API servers - to offload the IO and hold the connections to the clients while waiting the job to be done
+2. Centralized queue - for keeping the jobs list, optionally: tiered queues, metrics for autoscale etc. 
+3. Scalable pool of asynchronous workers, that do the work.
+
+Incoming requests are enqueued and processed in the background, while the REST layer synchronously waits for and returns the final result.
 
 ### Additional Benefits
 
