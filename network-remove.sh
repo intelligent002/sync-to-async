@@ -1,0 +1,1 @@
+docker network rm sync-to-async
