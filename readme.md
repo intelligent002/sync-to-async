@@ -23,7 +23,7 @@ This architecture decouples the request buffering from processing. It introduces
 
 Incoming requests are enqueued and processed in the background, while the REST layer synchronously waits for and returns the final result.
 
-### Additional Benefits
+### Unlocked Benefits:
 
 - **Buffering Under Pressure** – The queue absorbs bursts, preventing request loss under high load.
 - **Optimized Load Distribution** – Decoupling request buffering from execution lets short tasks bypass long ones, keeping workers efficiently utilized.
