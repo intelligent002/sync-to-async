@@ -2,38 +2,38 @@
 
 ## Purpose – Proof of Concept
 
-This project demonstrates a scalable architectural pattern for REST APIs that must return synchronous responses to clients while performing the actual processing asynchronously behind the scenes.
+This project demonstrates a scalable architectural pattern for REST APIs that must provide synchronous responses to clients while performing the actual processing asynchronously in the background.
 
-It addresses the limitations of traditional worker-based systems that rely solely on internal buffers. In such systems:
+It addresses the limitations of traditional worker-based systems that rely solely on internal buffers. In such architectures:
 
-- Short tasks can get blocked behind long ones (no task reordering)
-- Each worker has its own isolated buffer, limiting burst handling capacity
-- Queue overflows are handled locally, making graceful degradation difficult
-- Prioritization or SLA-based routing is impractical without a shared queue
-- Retry logic is tightly coupled to worker state and not centralized
-- Observability is fragmented, making performance bottlenecks harder to track
+- Short tasks can be blocked behind long-running ones (no task prioritization or reordering)
+- Each worker maintains its own isolated queue, limiting the system’s ability to absorb request spikes
+- Overflow handling is local and uncoordinated, making graceful degradation harder to implement
+- Prioritization, SLA-based routing, or tiered QoS are impractical without centralized coordination
+- Retry logic is bound to the worker state, leading to duplicated or inconsistent strategies
+- Observability is fragmented across instances, complicating debugging and performance analysis
 
-This architecture decouples the request buffering from processing. It introduces a centralized queue between the REST layer and the workers, enabling fine-grained control, scalability, and reliability — while still maintaining a synchronous response model.
+This pattern decouples request handling from processing by introducing a centralized queue between the REST layer and the workers. It enables fine-grained control, elastic scaling, and robust fault handling — all while maintaining a synchronous interface for clients.
 
 ### The system consists of:
 
-1. Scalable pool of REST API servers - to offload the IO and hold the connections to the clients while waiting the job to be done
-2. Centralized queue - for keeping the jobs list, optionally: tiered queues, metrics for autoscale etc. 
-3. Scalable pool of asynchronous workers, that do the work.
+1. **A scalable pool of REST API servers** – Handles I/O, accepts incoming requests, and maintains client connections while awaiting results.
+2. **A centralized queue** – Stores incoming jobs, optionally with priority tiers and autoscaling metrics.
+3. **A scalable pool of asynchronous workers** – Consumes tasks from the queue and performs the actual processing.
 
-Incoming requests are enqueued and processed in the background, while the REST layer synchronously waits for and returns the final result.
+Incoming requests are enqueued and processed asynchronously, while the REST layer waits and synchronously returns the final result to the client.
 
-### Unlocked Benefits:
+### Unlocked Benefits list:
 
-- **Buffering Under Pressure** – The queue absorbs bursts, preventing request loss under high load.
-- **Optimized Load Distribution** – Decoupling request buffering from execution lets short tasks bypass long ones, keeping workers efficiently utilized.
-- **Graceful Degradation** – Enables queue-based backpressure and timeouts to maintain stability under pressure.
-- **Elastic Worker Scaling** – Workers can be scaled independently of REST services to match processing demand.
-- **Improved Fault Isolation** – The API layer remains responsive even if workers crash or restart.
-- **Better Resource Utilization** – REST handles I/O and waiting; workers focus on processing.
-- **Enables Quality of Service (QoS)** – Enables traffic prioritization, SLA-aware routing, and resource throttling.
-- **Centralized Retry Logic** – Failures can be retried by workers without involving clients.
-- **Loosely Coupled Components** – Services can be updated, restarted, or replaced independently without downtime.
-- **Simplified Observability** – Each stage can be monitored for latency, throughput, and errors.
-- **Mixed Processing Modes** – The system can fast-track simple requests and queue heavier ones.
-- **Uniform API Interface** – Clients use a standard synchronous API, with no need to understand internal queuing or async behavior.
+- **Buffering Under Pressure** – A shared queue absorbs traffic bursts, preventing request loss during peak load.
+- **Optimized Load Distribution** – Short tasks are not blocked behind long ones, improving overall system responsiveness.
+- **Graceful Degradation** – Queue-based backpressure and timeouts help the system remain stable under stress.
+- **Elastic Worker Scaling** – Worker replicas can scale independently based on demand and queue size.
+- **Improved Fault Isolation** – The REST layer remains operational even if workers fail or restart.
+- **Better Resource Utilization** – REST nodes handle I/O and waiting; workers are focused on processing.
+- **Enables Quality of Service (QoS)** – Supports prioritization, throttling, and SLA-aware task routing.
+- **Centralized Retry Logic** – Failures can be retried centrally, without relying on client retries.
+- **Loosely Coupled Components** – Each part of the system can be updated or replaced independently.
+- **Simplified Observability** – Each processing stage can be monitored for latency, throughput, and errors.
+- **Mixed Processing Modes** – Lightweight tasks can be fast-tracked; heavy tasks can be queued.
+- **Uniform API Interface** – Clients communicate with a standard REST API, abstracting away the async complexity.
