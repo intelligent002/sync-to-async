@@ -35,8 +35,6 @@ To overcome these issues, this pattern introduces a **centralized queue** betwee
 - **Mixed Workloads** – Lightweight requests can return fast; heavy ones queue.
 - **Simple API** – Clients interact with a traditional REST interface.
 
----
-
 ## Architecture Overview
 
 ![Sync-to-Async Flow](https://raw.githubusercontent.com/intelligent002/sync-to-async/refs/heads/main/charts/flow.png)
@@ -49,8 +47,6 @@ To overcome these issues, this pattern introduces a **centralized queue** betwee
 4. **REST** receives the result and responds to the **Client**.
 
 > The system is backend-agnostic and supports queue implementations like Redis, Kafka, RabbitMQ, etc.
-
----
 
 ## Implementation Details
 
@@ -82,8 +78,6 @@ Each result key has a **TTL** (default: 1 hour) to prevent memory leaks in case 
 | Worker fetch job     | `BLPOP validate:queue`                 | Blocking consumer             |
 | Push result          | `RPUSH validate:response:<request_id>` | One key per request           |
 | REST wait for result | `BLPOP validate:response:<request_id>` | Blocking until worker replies |
-
----
 
 ## Setup & Deployment
 
