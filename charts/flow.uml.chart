@@ -7,17 +7,16 @@ participant "Balancer" as balancer
 participant "REST" as rest
 end box
 box "Asynchronous" #lightyellow
-participant "Redis" as redis
+participant "Queue" as queue
 participant "Worker" as worker
 end box
 
-
 client -> balancer: HTTP Request
 balancer -> rest: Forward
-rest -> redis: RPUSH
-redis -> worker: BLPOP
-worker -> redis: RPUSH
-redis -> rest: BLPOP
+rest -> queue: push
+queue -> worker: pop
+worker -> queue: push
+queue -> rest: pop
 rest -> balancer: Response
 balancer -> client: HTTP 200
 

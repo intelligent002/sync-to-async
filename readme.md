@@ -38,5 +38,21 @@ Incoming requests are enqueued and processed asynchronously, while the REST laye
 - **Mixed Processing Modes** – Lightweight tasks can be fast-tracked; heavy tasks can be queued.
 - **Uniform API Interface** – Clients communicate with a standard REST API, abstracting away the async complexity.
 
-## Events Flow
+## Architecture Overview
 
+The diagram below illustrates the full lifecycle of a request in the sync-to-async system:
+
+![Sync-to-Async Flow](https://raw.githubusercontent.com/intelligent002/sync-to-async/refs/heads/main/charts/flow.png?token=GHSAT0AAAAAACKX6JA3NC3ABEQEW4SKIARWZ75NGRQ)
+
+### Flow Description:
+
+## Architecture Overview
+
+This architecture decouples synchronous API request handling from backend processing using a centralized queue.
+
+1. The **Client** sends a request to the **Balancer**, which routes it to a **REST API** instance.
+2. The **REST API** enqueues the job in a central **Queue** and waits for a result tied to the request ID.
+3. A **Worker** consumes the job from the **Queue**, processes it, and responds to the request-specific response channel in the **Queue**.
+4. The **REST API** picks up the result and replies to the client.
+
+This pattern is backend-agnostic and supports various queue implementations such as Redis, Kafka, RabbitMQ, etc.
