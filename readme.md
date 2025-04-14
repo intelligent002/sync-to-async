@@ -109,7 +109,7 @@ Prometheus requires **DNS-based service discovery** (e.g. `tasks.rest`) to scrap
 
 ### 1. Initialize Docker Swarm
 Enabling Docker Swarm mode activates additional orchestration features on your local Docker environment, such as service scaling, load balancing, and DNS-based service discovery.
-  ```bash
+```bash
   ./swarm-init.sh
 ```
 
@@ -122,10 +122,10 @@ The external overlay network is created once and reused. This is to avoid issues
 ### 3. Build & Deploy
 After making changes to the source code (e.g. REST or Worker services), you can rebuild and redeploy the updated containers using:
 ```bash
-   ./containers-build.sh
+  ./containers-build.sh
 ```
 ```bash
-   ./stack-deploy.sh
+  ./stack-deploy.sh
 ```
 
 ### 4. Cleanup
@@ -134,17 +134,17 @@ To fully reset the environment or free up space from unused resources:
 
 Remove the stack:
 ```bash
-   ./stack-remove.sh
+  ./stack-remove.sh
 ```
 
 Remove the network:
 ```bash
-   ./network-remove.sh
+  ./network-remove.sh
 ```
 
 Leave Swarm mode:
 ```bash
-   ./swarm-leave.sh
+  ./swarm-leave.sh
 ```
 
 ## Access the Deployment
@@ -161,7 +161,7 @@ Once the stack is deployed, the following services will be available:
 Example API request:
 
 ```bash
-   curl "http://localhost:3000/validate?content=test"
+  curl "http://localhost:3000/validate?content=test"
 ```
 
 Example API response:
