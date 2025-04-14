@@ -2,94 +2,79 @@
 
 ## Purpose – Proof of Concept
 
-This project demonstrates a scalable architectural pattern for REST APIs that must provide synchronous responses to clients while performing the actual processing asynchronously in the background.
+This project demonstrates a scalable architectural pattern for REST APIs that return synchronous responses to clients while handling processing asynchronously in the background.
 
-It addresses the limitations of traditional worker-based systems that rely solely on internal buffers. In such architectures:
+It addresses several limitations of traditional worker-based systems with internal buffers:
 
-- Short tasks can be blocked behind long-running ones (no task prioritization or reordering)
-- Each worker maintains its own isolated queue, limiting the system’s ability to absorb request spikes
-- Overflow handling is local and uncoordinated, making graceful degradation harder to implement
-- Prioritization, SLA-based routing, or tiered QoS are impractical without centralized coordination
-- Retry logic is bound to the worker state, leading to duplicated or inconsistent strategies
-- Observability is fragmented across instances, complicating debugging and performance analysis
+- Long-running tasks block shorter ones (no reordering or prioritization)
+- Worker-local queues limit burst-handling capabilities
+- Graceful degradation is difficult due to isolated overflow logic
+- Centralized QoS, SLA-aware routing, and retries are impractical
+- Observability is fragmented and debugging becomes harder
 
-This pattern decouples request handling from processing by introducing a centralized queue between the REST layer and the workers. It enables fine-grained control, elastic scaling, and robust fault handling — all while maintaining a synchronous interface for clients.
+To overcome these issues, this pattern introduces a **centralized queue** between the REST layer and workers. This decouples request handling from processing, allowing elastic scaling, fine-grained control, and robust fault tolerance — all while maintaining a synchronous API surface.
 
-### The system consists of:
+### Core Components
 
-1. **A scalable pool of REST API servers** – Handles I/O, accepts incoming requests, and maintains client connections while awaiting results.
-2. **A centralized queue** – Stores incoming jobs, optionally with priority tiers and autoscaling metrics.
-3. **A scalable pool of asynchronous workers** – Consumes tasks from the queue and performs the actual processing.
+1. **Scalable REST API layer** – Accepts requests and holds client connections while awaiting results.
+2. **Centralized queue** – Stores jobs, supports backpressure, and allows prioritization (in future iterations).
+3. **Workers pool** – Consumes and processes jobs asynchronously, independent of client connections.
 
-Incoming requests are enqueued and processed asynchronously, while the REST layer waits and synchronously returns the final result to the client.
+## Benefits
 
-### Unlocked Benefits list:
+- **Buffering Under Pressure** – Queue absorbs spikes, preserving responsiveness.
+- **Optimized Load Distribution** – Short tasks can bypass long ones.
+- **Graceful Degradation** – Queue TTLs and timeouts preserve system health.
+- **Elastic Worker Scaling** – Scale workers based on demand and queue size.
+- **Fault Isolation** – REST remains functional even if workers crash.
+- **Efficient Resource Use** – REST handles I/O; workers handle compute.
+- **QoS-Ready** – Future support for SLA-aware queues and priorities.
+- **Centralized Retry Logic** – Retries managed server-side, not by clients.
+- **Loosely Coupled** – Any service can be upgraded/replaced independently.
+- **Deep Observability** – Latency, throughput, and errors measurable at each stage.
+- **Mixed Workloads** – Lightweight requests can return fast; heavy ones queue.
+- **Simple API** – Clients interact with a traditional REST interface.
 
-- **Buffering Under Pressure** – A shared queue absorbs traffic bursts, preventing request loss during peak load.
-- **Optimized Load Distribution** – Short tasks are not blocked behind long ones, improving overall system responsiveness.
-- **Graceful Degradation** – Queue-based backpressure and timeouts help the system remain stable under stress.
-- **Elastic Worker Scaling** – Worker replicas can scale independently based on demand and queue size.
-- **Improved Fault Isolation** – The REST layer remains operational even if workers fail or restart.
-- **Better Resource Utilization** – REST nodes handle I/O and waiting; workers are focused on processing.
-- **Enables Quality of Service (QoS)** – Supports prioritization, throttling, and SLA-aware task routing.
-- **Centralized Retry Logic** – Failures can be retried centrally, without relying on client retries.
-- **Loosely Coupled Components** – Each part of the system can be updated or replaced independently.
-- **Simplified Observability** – Each processing stage can be monitored for latency, throughput, and errors.
-- **Mixed Processing Modes** – Lightweight tasks can be fast-tracked; heavy tasks can be queued.
-- **Uniform API Interface** – Clients communicate with a standard REST API, abstracting away the async complexity.
+---
 
 ## Architecture Overview
 
-The diagram below illustrates the full lifecycle of a request in the sync-to-async system:
-
 ![Sync-to-Async Flow](https://raw.githubusercontent.com/intelligent002/sync-to-async/refs/heads/main/charts/flow.png)
 
-### Flow Description:
+### Flow Summary
 
-This architecture decouples synchronous API request handling from backend processing using a centralized queue.
+1. **Client** sends a request via **Balancer** to a **REST** instance.
+2. **REST** pushes a job into a **Queue** and waits for a response.
+3. **Worker** pops the job, processes it, and pushes the result to a dedicated queue key.
+4. **REST** receives the result and responds to the **Client**.
 
-1. The **Client** sends a request to the **Balancer**, which routes it to a **REST API** instance.
-2. The **REST API** enqueues the job in a central **Queue** and waits for a result tied to the request ID.
-3. A **Worker** consumes the job from the **Queue**, processes it, and responds to the request-specific response channel in the **Queue**.
-4. The **REST API** picks up the result and replies to the client.
+> The system is backend-agnostic and supports queue implementations like Redis, Kafka, RabbitMQ, etc.
 
-This pattern is backend-agnostic and supports various queue implementations such as Redis, Kafka, RabbitMQ, etc.
+---
 
-## Implementation Details:
-
-The current implementation uses **Go** for the REST service and **Redis** as the queue mechanism.
+## Implementation Details
 
 ### REST API – Go
 
-The REST layer is implemented in **Go**, taking advantage of its lightweight **goroutines** and non-blocking I/O model.
-
-This makes it particularly well-suited for scenarios where many client connections may remain open simultaneously — as each REST instance can efficiently hold thousands of waiting connections without incurring the heavy overhead of traditional threads.
-
-In this architecture, the REST service receives a request, enqueues it into the queue, and then asynchronously waits for the corresponding result — all while keeping the client connection open in a resource-efficient way.
+The REST service is built in **Go**, utilizing goroutines and non-blocking I/O to efficiently hold thousands of simultaneous connections. This enables REST instances to serve as "connection waiters" while the actual work is offloaded.
 
 ### Queue – Redis
 
-This PoC uses **Redis lists** as the queuing mechanism.  
+This PoC uses **Redis Lists** for simplicity and performance. Core operations:
 
-Redis was selected for its simplicity, speed, and support for **blocking list operations** (`BLPOP`, `RPUSH`), which are ideal for implementing the core sync-to-async messaging flow.
+- `RPUSH` – REST pushes jobs to `validate:queue`
+- `BLPOP` – Workers pull jobs
+- `RPUSH` – Workers push results to `validate:response:<request_id>`
+- `BLPOP` – REST pulls result by request ID
 
-Each incoming job is pushed to a central queue, and a worker consumes it using `BLPOP`. The worker then publishes the result back to a dedicated key associated with the original request ID.
+Each result key has a **TTL** (default: 1 hour) to prevent memory leaks in case of dropped connections.
 
-To prevent stale data accumulation (e.g. due to dropped clients), each result key is assigned a **TTL (time-to-live)** using the `EXPIRE` command. This ensures that even if the REST service disconnects or crashes, the result will be automatically cleaned up after a configurable retention period (default: 1 hour).
+> The queue layer is abstracted, so Redis can be swapped for:
+> - **Kafka** (keyed topics)
+> - **RabbitMQ** (`correlation_id`)
+> - **Amazon SQS**, **NATS**, etc.
 
-However, the system is designed in an abstracted way that allows replacing Redis with other queueing systems such as:
-
-- **Kafka** (via keyed topics or headers)
-- **RabbitMQ** (using reply queues and `correlation_id`)
-- **Amazon SQS**, **NATS**, etc.
-
-The only requirement is support for:
-
-- Enqueueing jobs
-- Blocking consumption
-- Response routing based on request ID
-
-### Redis Flow
+#### Redis Job Flow
 
 | Action               | Redis Command                          | Key Pattern                   |
 |----------------------|----------------------------------------|-------------------------------|
@@ -98,38 +83,35 @@ The only requirement is support for:
 | Push result          | `RPUSH validate:response:<request_id>` | One key per request           |
 | REST wait for result | `BLPOP validate:response:<request_id>` | Blocking until worker replies |
 
+---
+
 ## Setup & Deployment
 
 ### Requirements
 
-- Docker & Docker Swarm
-- Internet access to pull base images
+- Docker + Docker Swarm
+- Internet access to pull docker base images:
+  - `traefik:v3.3` – used as the reverse proxy and load balancer
+  - `golang:1.24.2-alpine3.21` – for building the REST and Worker services
+  - `redis:7` – used as the message queue
+  - `prom/prometheus:v2.53.4` – metrics collection
+  - `grafana/grafana:11.6.0` – metrics visualization
 
 ### Why Docker Swarm?
 
-This PoC uses **Docker Swarm** instead of plain Docker Compose for the following reason:
+Prometheus requires **DNS-based service discovery** (e.g. `tasks.rest`) to scrape metrics from all REST replicas. This feature is **not supported** in Docker Compose. Swarm also simplifies multi-replica networking and Traefik routing.
 
-- **Prometheus DNS-based Service Discovery**  
-  Swarm enables Prometheus to discover container replicas dynamically via internal DNS (e.g. `tasks.rest`), which is **not supported in Compose**. This is essential for collecting metrics from all running REST instances:
-  
-  ```yaml
-  # prometheus/prometheus.yml
-  
+#### Prometheus config snippet:
+
+```yaml
   - job_name: 'rest'
     dns_sd_configs:
       - names: ['tasks.rest']
         type: A
         port: 3000
+```
 
-The following base images needed:
-
-- `traefik:v3.3` – used as the reverse proxy and load balancer
-- `golang:1.24.2-alpine3.21` – for building the REST and Worker services
-- `redis:7` – used as the message queue
-- `prom/prometheus:v2.53.4` – metrics collection
-- `grafana/grafana:11.6.0` – metrics visualization
-
-## Deployment
+## Deployment Steps
 
 ### 1. Initialize Docker Swarm
 Enabling Docker Swarm mode activates additional orchestration features on your local Docker environment, such as service scaling, load balancing, and DNS-based service discovery.
