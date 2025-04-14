@@ -46,8 +46,6 @@ The diagram below illustrates the full lifecycle of a request in the sync-to-asy
 
 ### Flow Description:
 
-## Architecture Overview
-
 This architecture decouples synchronous API request handling from backend processing using a centralized queue.
 
 1. The **Client** sends a request to the **Balancer**, which routes it to a **REST API** instance.
@@ -56,3 +54,29 @@ This architecture decouples synchronous API request handling from backend proces
 4. The **REST API** picks up the result and replies to the client.
 
 This pattern is backend-agnostic and supports various queue implementations such as Redis, Kafka, RabbitMQ, etc.
+
+## Implementation Details (Redis based Queue)
+
+This PoC uses **Redis** to implement the abstract queue described above.
+
+### Key Mechanisms:
+
+| Action                  | Redis Command                          | Key Pattern                           |
+|-------------------------|-----------------------------------------|----------------------------------------|
+| Enqueue job             | `RPUSH validate:queue`                  | Shared job queue                       |
+| Worker fetch job        | `BLPOP validate:queue`                  | Blocking consumer                      |
+| Push result             | `RPUSH validate:response:<request_id>`  | One key per request                    |
+| REST wait for result    | `BLPOP validate:response:<request_id>`  | Blocking until worker replies          |
+| Optional cleanup        | `EXPIRE` + `DEL`                        | Avoids memory leaks for stale results  |
+
+---
+
+## Setup & Deployment
+
+### Requirements:
+
+- Docker & Docker Compose or Docker Swarm
+- Redis
+- Go (for manual testing/debug builds)
+- Prometheus (optional)
+- Grafana (optional)
