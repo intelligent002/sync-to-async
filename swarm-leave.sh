@@ -1,1 +1,1 @@
-swarm leave
+docker swarm leave
