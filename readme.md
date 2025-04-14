@@ -37,3 +37,6 @@ Incoming requests are enqueued and processed asynchronously, while the REST laye
 - **Simplified Observability** – Each processing stage can be monitored for latency, throughput, and errors.
 - **Mixed Processing Modes** – Lightweight tasks can be fast-tracked; heavy tasks can be queued.
 - **Uniform API Interface** – Clients communicate with a standard REST API, abstracting away the async complexity.
+
+## Events Flow
+

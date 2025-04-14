@@ -1,0 +1,24 @@
+@startuml
+title Sync-to-Async REST Flow
+
+box "Synchronous" #lightblue
+participant "Client" as client
+participant "Balancer" as balancer
+participant "REST" as rest
+end box
+box "Asynchronous" #lightyellow
+participant "Redis" as redis
+participant "Worker" as worker
+end box
+
+
+client -> balancer: HTTP Request
+balancer -> rest: Forward
+rest -> redis: RPUSH
+redis -> worker: BLPOP
+worker -> redis: RPUSH
+redis -> rest: BLPOP
+rest -> balancer: Response
+balancer -> client: HTTP 200
+
+@enduml
