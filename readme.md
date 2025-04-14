@@ -123,8 +123,6 @@ The external overlay network is created once and reused. This is to avoid issues
 After making changes to the source code (e.g. REST or Worker services), you can rebuild and redeploy the updated containers using:
 ```bash
   ./containers-build.sh
-```
-```bash
   ./stack-deploy.sh
 ```
 
