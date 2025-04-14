@@ -55,7 +55,7 @@ This architecture decouples synchronous API request handling from backend proces
 
 This pattern is backend-agnostic and supports various queue implementations such as Redis, Kafka, RabbitMQ, etc.
 
-## Implementation Details
+## Implementation Details:
 
 The current implementation uses **Go** for the REST service and **Redis** as the queue mechanism.
 
@@ -66,8 +66,6 @@ The REST layer is implemented in **Go**, taking advantage of its lightweight **g
 This makes it particularly well-suited for scenarios where many client connections may remain open simultaneously — as each REST instance can efficiently hold thousands of waiting connections without incurring the heavy overhead of traditional threads.
 
 In this architecture, the REST service receives a request, enqueues it into the queue, and then asynchronously waits for the corresponding result — all while keeping the client connection open in a resource-efficient way.
-
----
 
 ### Queue – Redis
 
