@@ -216,4 +216,4 @@ This Proof of Concept is focused on demonstrating the core sync-to-async archite
 - **No retry logic** – Failed worker executions are not retried.
 - **No dead-letter queue** – Expired or dropped jobs are not captured for later inspection.
 - **No authentication or rate limiting** – The REST API is open and unauthenticated.
-- **No QoS or priority handling** – Queue prioritization, SLA routing, and autoscaling by metrics are not implemented.
+- **No QoS or priority handling** – Queue prioritization, SLA routing, and autoscaling by metrics.
