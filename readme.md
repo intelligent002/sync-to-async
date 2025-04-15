@@ -174,17 +174,19 @@ Once the stack is deployed, the following services will be available:
 | Grafana    | [http://localhost:3001](http://localhost:3001) | Metrics dashboard (credentials: `admin / very-secret`) |
 | Traefik    | [http://localhost:8080](http://localhost:8080) | Traefik dashboard and routing debug panel              |
 
-After deployment, let the system settle down for like a minute, then those links should be available: 
+After deployment, let the system settle down for like a minute, then those links should be available:
 
 ## Prometheus
+
 [![Prometheus](https://raw.githubusercontent.com/intelligent002/sync-to-async/refs/heads/main/charts/prometheus.png)](http://localhost:3000/)
 
 ## Grafana
+
 [![Grafana](https://raw.githubusercontent.com/intelligent002/sync-to-async/refs/heads/main/charts/grafana.png)](http://localhost:3001/)
 
 ## Traefik
-[![Traefik](https://raw.githubusercontent.com/intelligent002/sync-to-async/refs/heads/main/charts/traefik.png)](http://localhost:8080/)
 
+[![Traefik](https://raw.githubusercontent.com/intelligent002/sync-to-async/refs/heads/main/charts/traefik.png)](http://localhost:8080/)
 
 Example API request:
 
@@ -196,21 +198,50 @@ Example API response:
 
 ```jsonc
 {
-    "request_id": "69281e0d-a5e5-4136-af9c-e1dec6e4787b",   // Unique identifier assigned to the request (used for tracing).
+    "request_id": "69281e0d-a5e5-4136-af9c-e1dec6e4787b",  // Unique identifier assigned to the request (used for tracing).
     "meta": {
-        "proxy_request_received_ns":   1744645157689149983, // When the REST service first received the request.
-        "proxy_request_pushed_ns":     1744645157689161384, // When the job was pushed into the queue.
-        "worker_request_pulled_ns":    1744645157689906528, // When the worker pulled the job from the queue.
-        "worker_response_pushed_ns":   1744645157689910728, // When the worker pushed the result back into the queue.
-        "proxy_response_pulled_ns":    1744645157690571568, // When the REST service pulled the result to respond to the client.
-        "proxy_roundtrip_duration_ns": 1421585              // Full round-trip duration (from receive to response), in nanoseconds.
+        "rest_request_received_ns":   1744645157689149983, // When the REST service first received the request.
+        "rest_request_pushed_ns":     1744645157689161384, // When the job was pushed into the queue.
+        "worker_request_pulled_ns":   1744645157689906528, // When the worker pulled the job from the queue.
+        "worker_response_pushed_ns":  1744645157689910728, // When the worker pushed the result back into the queue.
+        "rest_response_pulled_ns":    1744645157690571568, // When the REST service pulled the result to respond to the client.
+        "rest_roundtrip_duration_ns": 1421585              // Full round-trip duration (from receive to response), in nanoseconds.
     },
     "data": {
-        "content": "BALAGAN",                               // Returned result - uppercase of the input.
-        "result": true                                      // Result/Error indication.
+        "content": "BALAGAN",                              // Returned result - uppercase of the input.
+        "result": true                                     // Result/Error indication.
     }
 }
 ```
+
+## Observability
+
+The REST service exposes the following **custom Prometheus metrics**, alongside the **default Go and Fiber runtime metrics** (e.g., goroutines, memory usage, HTTP request durations).
+Metrics are available at the default endpoint: `http://localhost:3000/metrics` 
+
+### Counters
+
+| Metric Name           | Description                                   |
+|-----------------------|-----------------------------------------------|
+| `rest_success_total`  | Total number of successful requests           |
+| `rest_failure_total`  | Total number of failed requests               |
+
+### Gauges
+
+| Metric Name         | Description                                                   |
+|---------------------|---------------------------------------------------------------|
+| `rest_queued_count` | Queue size gauge, updated every 30s. Similar across replicas. |
+
+### Histograms
+
+| Metric Name                               | Description                                                                 |
+|-------------------------------------------|-----------------------------------------------------------------------------|
+| `duration_rest_request_to_queue_push_ms`  | Duration from REST request received to Redis push (REST)                    |
+| `duration_rest_push_to_worker_pull_ms`    | Duration from Redis push (REST) to Redis pull (Worker)                     |
+| `duration_worker_pull_to_worker_push_ms`  | Duration from Redis pull (Worker) to Redis push (Worker)                   |
+| `duration_worker_push_to_rest_pull_ms`    | Duration from Redis push (Worker) to Redis pull (REST)                     |
+| `duration_rest_pull_to_rest_response_ms`  | Duration from Redis pull (REST) to final HTTP response (REST)              |
+| `duration_total_roundtrip_ms`             | Total roundtrip time from REST request to REST response                    |
 
 ## Limitations and Out-of-Scope Items
 

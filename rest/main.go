@@ -39,7 +39,7 @@ var (
 
 	gaugeQueued = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "rest_queued_count",
-		Help: "Unreliable counter of queued requests (may fail on errors)",
+		Help: "Queue size gauge, updated every 30s. Similar across replicas.",
 	})
 
 	durationRestRequestToRestPushMs = prometheus.NewHistogram(prometheus.HistogramOpts{
