@@ -135,6 +135,18 @@ func main() {
 		durationFullCycleMs,              // Full roundtrip: REST request → HTTP response
 	)
 
+	go func() {
+		ticker := time.NewTicker(30 * time.Second)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			length, err := rdb.LLen(ctx, "validate:queue").Result()
+			if err == nil {
+				gaugeQueued.Set(float64(length))
+			}
+		}
+	}()
+
 	app := fiber.New()
 
 	app.Get("/metrics", adaptor.HTTPHandler(promhttp.Handler()))
@@ -160,9 +172,8 @@ func validateHandler(c *fiber.Ctx) error {
 		counterFailure.Inc()
 		return fiber.NewError(fiber.StatusInternalServerError, "Failed to push to job queue")
 	}
-	gaugeQueued.Inc()
+
 	result, err := waitForResult(msg.RequestID)
-	gaugeQueued.Dec()
 	if err != nil {
 		counterFailure.Inc()
 		return fiber.NewError(fiber.StatusGatewayTimeout, "Timeout waiting for result")
@@ -187,7 +198,7 @@ func extractContent(c *fiber.Ctx) (string, error) {
 
 func prepareMessage(content string, requestReceived *int64) *Message {
 	return &Message{
-		RequestID: uuid.New().String(),
+		RequestID: uuid.NewString(),
 		Meta: Meta{
 			RestRequestReceived: requestReceived,
 			RestRequestPushed:   nowNs(),
