@@ -83,7 +83,7 @@ services:
         constraints: [node.role == manager]
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana:latest
     labels:
       - "traefik.enable=false"
     depends_on:
