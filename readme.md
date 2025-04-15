@@ -177,13 +177,13 @@ Once the stack is deployed, the following services will be available:
 After deployment, let the system settle down for like a minute, then those links should be available: 
 
 ## Prometheus
-![Prometheus](https://raw.githubusercontent.com/intelligent002/sync-to-async/refs/heads/main/charts/prometheus.png)(http://localhost:9090/)
+[![Prometheus](https://raw.githubusercontent.com/intelligent002/sync-to-async/refs/heads/main/charts/prometheus.png)](http://localhost:3000/)
 
 ## Grafana
-![Grafana](https://raw.githubusercontent.com/intelligent002/sync-to-async/refs/heads/main/charts/grafana.png)(http://localhost:3001/)
+[![Grafana](https://raw.githubusercontent.com/intelligent002/sync-to-async/refs/heads/main/charts/grafana.png)](http://localhost:3001/)
 
 ## Traefik
-![Traefik](https://raw.githubusercontent.com/intelligent002/sync-to-async/refs/heads/main/charts/traefik.png)(http://localhost:8080/)
+[![Traefik](https://raw.githubusercontent.com/intelligent002/sync-to-async/refs/heads/main/charts/traefik.png)](http://localhost:8080/)
 
 
 Example API request:
