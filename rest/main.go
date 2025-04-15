@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gofiber/fiber/v2/middleware/adaptor"
 	"github.com/json-iterator/go"
+	"log"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -82,12 +83,12 @@ var (
 // --- Data Structures ---
 
 type Meta struct {
-	RestRequestReceived  *int64 `json:"rest_request_received_ns"`
-	RestRequestPushed    *int64 `json:"rest_request_pushed_ns"`
-	WorkerRequestPulled  *int64 `json:"worker_request_pulled_ns"`
-	WorkerResponsePushed *int64 `json:"worker_response_pushed_ns"`
-	RestResponsePulled   *int64 `json:"rest_response_pulled_ns"`
-	RoundtripDurationNs  *int64 `json:"rest_roundtrip_duration_ns"`
+	RestRequestReceived  int64 `json:"rest_request_received_ns"`
+	RestRequestPushed    int64 `json:"rest_request_pushed_ns"`
+	WorkerRequestPulled  int64 `json:"worker_request_pulled_ns"`
+	WorkerResponsePushed int64 `json:"worker_response_pushed_ns"`
+	RestResponsePulled   int64 `json:"rest_response_pulled_ns"`
+	RoundtripDurationNs  int64 `json:"rest_roundtrip_duration_ns"`
 }
 
 type Data struct {
@@ -103,9 +104,8 @@ type Message struct {
 
 // --- Utility Functions ---
 
-func nowNs() *int64 {
-	t := time.Now().UnixNano()
-	return &t
+func nowNs() int64 {
+	return time.Now().UnixNano()
 }
 
 // --- Redis Setup ---
@@ -155,7 +155,9 @@ func main() {
 	app.Get("/validate", validateHandler)
 
 	fmt.Println("Listening on :3000")
-	app.Listen(":3000")
+	if err := app.Listen(":3000"); err != nil {
+		log.Fatalf("Cannot bind to port 3000 error: %v", err)
+	}
 }
 
 // --- Main Controller Handler ---
@@ -198,7 +200,7 @@ func extractContent(c *fiber.Ctx) (string, error) {
 	return input, nil
 }
 
-func prepareMessage(content string, requestReceived *int64) *Message {
+func prepareMessage(content string, requestReceived int64) *Message {
 	return &Message{
 		RequestID: uuid.NewString(),
 		Meta: Meta{
@@ -240,24 +242,24 @@ func logHandling(msg *Message) {
 	fmt.Printf("[REST] Handling request_id=%s | content=%q | received_ns=%d\n",
 		msg.RequestID,
 		msg.Data.Content,
-		*msg.Meta.RestRequestReceived,
+		msg.Meta.RestRequestReceived,
 	)
 }
 
 func finalizeResult(msg *Message) *Message {
 	now := time.Now().UnixNano()
-	msg.Meta.RestResponsePulled = &now
+	msg.Meta.RestResponsePulled = now
 
 	// Compute and store total roundtrip duration
-	duration := now - *msg.Meta.RestRequestReceived
-	msg.Meta.RoundtripDurationNs = &duration
+	duration := now - msg.Meta.RestRequestReceived
+	msg.Meta.RoundtripDurationNs = duration
 
 	// Observe Prometheus histograms (in ms)
-	durationRestRequestToRestPushMs.Observe(float64(*msg.Meta.RestRequestPushed-*msg.Meta.RestRequestReceived) / 1_000_000)
-	durationRestPushToWorkerPullMs.Observe(float64(*msg.Meta.WorkerRequestPulled-*msg.Meta.RestRequestPushed) / 1_000_000)
-	durationWorkerPullToWorkerPushMs.Observe(float64(*msg.Meta.WorkerResponsePushed-*msg.Meta.WorkerRequestPulled) / 1_000_000)
-	durationWorkerPushToRestPullMs.Observe(float64(*msg.Meta.RestResponsePulled-*msg.Meta.WorkerResponsePushed) / 1_000_000)
-	durationRestPullToRestResponseMs.Observe(float64(now-*msg.Meta.RestResponsePulled) / 1_000_000)
+	durationRestRequestToRestPushMs.Observe(float64(msg.Meta.RestRequestPushed-msg.Meta.RestRequestReceived) / 1_000_000)
+	durationRestPushToWorkerPullMs.Observe(float64(msg.Meta.WorkerRequestPulled-msg.Meta.RestRequestPushed) / 1_000_000)
+	durationWorkerPullToWorkerPushMs.Observe(float64(msg.Meta.WorkerResponsePushed-msg.Meta.WorkerRequestPulled) / 1_000_000)
+	durationWorkerPushToRestPullMs.Observe(float64(msg.Meta.RestResponsePulled-msg.Meta.WorkerResponsePushed) / 1_000_000)
+	durationRestPullToRestResponseMs.Observe(float64(now-msg.Meta.RestResponsePulled) / 1_000_000)
 	durationFullCycleMs.Observe(float64(duration) / 1_000_000)
 
 	// Mark success

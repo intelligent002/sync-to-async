@@ -15,12 +15,12 @@ var ctx = context.Background()
 // --- Structures aligned with REST service ---
 
 type Meta struct {
-	RestRequestReceived  *int64 `json:"rest_request_received_ns"`
-	RestRequestPushed    *int64 `json:"rest_request_pushed_ns"`
-	WorkerRequestPulled  *int64 `json:"worker_request_pulled_ns"`
-	WorkerResponsePushed *int64 `json:"worker_response_pushed_ns"`
-	RestResponsePulled   *int64 `json:"rest_response_pulled_ns"`
-	RoundtripDurationNs  *int64 `json:"rest_roundtrip_duration_ns"`
+	RestRequestReceived  int64 `json:"rest_request_received_ns"`
+	RestRequestPushed    int64 `json:"rest_request_pushed_ns"`
+	WorkerRequestPulled  int64 `json:"worker_request_pulled_ns"`
+	WorkerResponsePushed int64 `json:"worker_response_pushed_ns"`
+	RestResponsePulled   int64 `json:"rest_response_pulled_ns"`
+	RoundtripDurationNs  int64 `json:"rest_roundtrip_duration_ns"`
 }
 
 type Data struct {
@@ -34,9 +34,8 @@ type Message struct {
 	Data      Data   `json:"data"`
 }
 
-func nowNs() *int64 {
-	ns := time.Now().UnixNano()
-	return &ns
+func nowNs() int64 {
+	return time.Now().UnixNano()
 }
 
 func main() {
