@@ -10,17 +10,17 @@ This approach addresses several limitations of traditional worker-based systems 
 - Long-running tasks block shorter ones (no reordering or prioritization)
 - Worker-local queues limit burst-handling capabilities
 - Graceful degradation is difficult due to isolated overflow logic
-- Centralized QoS, SLA-aware routing, and retries are impractical
+- Centralized QoS, SLA-aware routing and retries are impractical
 - Observability is fragmented and debugging becomes harder
 
 To overcome these issues, this pattern introduces a **centralized queue** between the REST layer and workers. This
-decouples request handling from processing, allowing elastic scaling, fine-grained control, and robust fault tolerance —
+decouples request handling from processing, allowing elastic scaling, fine-grained control and robust fault tolerance —
 all while maintaining a synchronous API surface.
 
 ## Core Components
 
 1. **Scalable REST API layer** – Accepts requests and holds client connections while awaiting results.
-2. **Centralized queue** – Stores jobs, supports backpressure, and allows prioritization (in future iterations).
+2. **Centralized queue** – Stores jobs, supports backpressure and allows prioritization (in future iterations).
 3. **Scalable Workers layer** – Consumes and processes jobs asynchronously, independent of client connections.
 
 ## Benefits
