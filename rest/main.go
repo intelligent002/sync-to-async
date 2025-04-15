@@ -112,7 +112,7 @@ func nowNs() *int64 {
 func initRedis() {
 	rdb = redis.NewClient(&redis.Options{
 		Addr:     "redis:6379",
-		PoolSize: 50,
+		PoolSize: 80,
 	})
 }
 
