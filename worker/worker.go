@@ -12,15 +12,15 @@ import (
 
 var ctx = context.Background()
 
-// --- Structures match the REST side with *_ns fields ---
+// --- Structures aligned with REST service ---
 
 type Meta struct {
-	ProxyRequestReceived     *int64 `json:"proxy_request_received_ns"`
-	ProxyRequestPushed       *int64 `json:"proxy_request_pushed_ns"`
-	WorkerRequestPulled      *int64 `json:"worker_request_pulled_ns"`
-	WorkerResponsePushed     *int64 `json:"worker_response_pushed_ns"`
-	ProxyResponsePulled      *int64 `json:"proxy_response_pulled_ns"`
-	ProxyRoundtripDurationNs *int64 `json:"proxy_roundtrip_duration_ns"`
+	RestRequestReceived  *int64 `json:"rest_request_received_ns"`
+	RestRequestPushed    *int64 `json:"rest_request_pushed_ns"`
+	WorkerRequestPulled  *int64 `json:"worker_request_pulled_ns"`
+	WorkerResponsePushed *int64 `json:"worker_response_pushed_ns"`
+	RestResponsePulled   *int64 `json:"rest_response_pulled_ns"`
+	RoundtripDurationNs  *int64 `json:"rest_roundtrip_duration_ns"`
 }
 
 type Data struct {
@@ -58,15 +58,17 @@ func main() {
 			continue
 		}
 
+		// Set worker pull timestamp
 		msg.Meta.WorkerRequestPulled = nowNs()
 
 		// Simulate processing
 		msg.Data.Content = strings.ToUpper(msg.Data.Content)
 		msg.Data.Result = true
 
+		// Set worker push timestamp
 		msg.Meta.WorkerResponsePushed = nowNs()
 
-		// Push response to result queue with 1-hour expiration
+		// Push result to response queue with 1-hour expiration
 		resultKey := fmt.Sprintf("validate:response:%s", msg.RequestID)
 		serialized, _ := json.Marshal(msg)
 

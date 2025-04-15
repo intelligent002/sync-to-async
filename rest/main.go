@@ -18,48 +18,62 @@ var (
 	ctx = context.Background()
 	rdb *redis.Client
 
+	// --- Metrics ---
+
 	buckets = []float64{
 		0.1, 0.2, 0.5, 1, 2, 3, 4, 5,
 		10, 20, 50, 100, 200, 500,
 		1000, 2000,
 	}
 
-	successCounter = prometheus.NewCounter(prometheus.CounterOpts{
+	counterSuccess = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "rest_success_total",
-		Help: "Total number of successful validations",
+		Help: "Total number of successful requests",
 	})
 
-	failureCounter = prometheus.NewCounter(prometheus.CounterOpts{
+	counterFailure = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "rest_failure_total",
-		Help: "Total number of failed validations",
+		Help: "Total number of failed requests",
 	})
 
-	queuedGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+	gaugeQueued = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "rest_queued_count",
-		Help: "Current count of queued validations",
+		Help: "Unreliable counter of queued requests (may fail on errors)",
 	})
 
-	proxyQueueDurationMs = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name:    "rest_proxy_queue_duration_ms",
-		Help:    "Duration from proxy receive to Redis push (ms)",
+	durationRestRequestToRestPushMs = prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name:    "duration_rest_request_to_queue_push_ms",
+		Help:    "Duration from REST request to Redis push (REST) (ms)",
 		Buckets: buckets,
 	})
 
-	workerProcessDurationMs = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name:    "rest_worker_process_duration_ms",
-		Help:    "Duration from Redis push to worker response (ms)",
+	durationRestPushToWorkerPullMs = prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name:    "duration_rest_push_to_worker_pull_ms",
+		Help:    "Duration from Redis push (REST) to Redis pull (Worker) (ms)",
 		Buckets: buckets,
 	})
 
-	proxyWaitDurationMs = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name:    "rest_proxy_wait_duration_ms",
-		Help:    "Duration from worker response to proxy response (ms)",
+	durationWorkerPullToWorkerPushMs = prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name:    "duration_worker_pull_to_worker_push_ms",
+		Help:    "Duration from Redis pull (Worker) to Redis push (Worker) (ms)",
 		Buckets: buckets,
 	})
 
-	fullCycleDurationMs = prometheus.NewHistogram(prometheus.HistogramOpts{
-		Name:    "rest_total_duration_ms",
-		Help:    "Full roundtrip duration from receive to response (ms)",
+	durationWorkerPushToRestPullMs = prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name:    "duration_worker_push_to_rest_pull_ms",
+		Help:    "Duration from Redis push (Worker) to Redis pull (REST) (ms)",
+		Buckets: buckets,
+	})
+
+	durationRestPullToRestResponseMs = prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name:    "duration_rest_pull_to_rest_response_ms",
+		Help:    "Duration from Redis pull (REST) to HTTP response (REST) (ms)",
+		Buckets: buckets,
+	})
+
+	durationFullCycleMs = prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name:    "duration_total_roundtrip_ms",
+		Help:    "Total roundtrip time from REST request to REST response (ms)",
 		Buckets: buckets,
 	})
 )
@@ -67,12 +81,12 @@ var (
 // --- Data Structures ---
 
 type Meta struct {
-	ProxyRequestReceived     *int64 `json:"proxy_request_received_ns"`
-	ProxyRequestPushed       *int64 `json:"proxy_request_pushed_ns"`
-	WorkerRequestPulled      *int64 `json:"worker_request_pulled_ns"`
-	WorkerResponsePushed     *int64 `json:"worker_response_pushed_ns"`
-	ProxyResponsePulled      *int64 `json:"proxy_response_pulled_ns"`
-	ProxyRoundtripDurationNs *int64 `json:"proxy_roundtrip_duration_ns"`
+	RestRequestReceived  *int64 `json:"rest_request_received_ns"`
+	RestRequestPushed    *int64 `json:"rest_request_pushed_ns"`
+	WorkerRequestPulled  *int64 `json:"worker_request_pulled_ns"`
+	WorkerResponsePushed *int64 `json:"worker_response_pushed_ns"`
+	RestResponsePulled   *int64 `json:"rest_response_pulled_ns"`
+	RoundtripDurationNs  *int64 `json:"rest_roundtrip_duration_ns"`
 }
 
 type Data struct {
@@ -108,9 +122,15 @@ func main() {
 
 	// Register Prometheus metrics
 	prometheus.MustRegister(
-		successCounter, failureCounter,
-		queuedGauge,
-		proxyQueueDurationMs, workerProcessDurationMs, proxyWaitDurationMs, fullCycleDurationMs,
+		counterSuccess,                   // Operation success counters
+		counterFailure,                   // Operation failed counters
+		gaugeQueued,                      // Unreliable counter of queued requests (may fail on errors)
+		durationRestRequestToRestPushMs,  // From REST request receive → Redis push (by REST)
+		durationRestPushToWorkerPullMs,   // From Redis push (REST) → Redis pull (Worker)
+		durationWorkerPullToWorkerPushMs, // From Redis pull (Worker) → Redis push (Worker)
+		durationWorkerPushToRestPullMs,   // From Redis push (Worker) → Redis pull (REST)
+		durationRestPullToRestResponseMs, // From Redis pull (REST) → HTTP response (REST)
+		durationFullCycleMs,              // Full roundtrip: REST request → HTTP response
 	)
 
 	app := fiber.New()
@@ -125,23 +145,24 @@ func main() {
 // --- Main Controller Handler ---
 
 func validateHandler(c *fiber.Ctx) error {
+	requestReceived := nowNs()
 	input, err := extractContent(c)
 	if err != nil {
 		return err
 	}
 
-	msg := prepareMessage(input)
+	msg := prepareMessage(input, requestReceived)
 	logHandling(msg)
 
 	if err := pushToQueue(msg); err != nil {
-		failureCounter.Inc()
+		counterFailure.Inc()
 		return fiber.NewError(fiber.StatusInternalServerError, "Failed to push to job queue")
 	}
-	queuedGauge.Inc()
+	gaugeQueued.Inc()
 	result, err := waitForResult(msg.RequestID)
-	queuedGauge.Dec()
+	gaugeQueued.Dec()
 	if err != nil {
-		failureCounter.Inc()
+		counterFailure.Inc()
 		return fiber.NewError(fiber.StatusGatewayTimeout, "Timeout waiting for result")
 	}
 
@@ -162,13 +183,12 @@ func extractContent(c *fiber.Ctx) (string, error) {
 	return input, nil
 }
 
-func prepareMessage(content string) *Message {
-	now := nowNs()
+func prepareMessage(content string, requestReceived *int64) *Message {
 	return &Message{
 		RequestID: uuid.New().String(),
 		Meta: Meta{
-			ProxyRequestReceived: now,
-			ProxyRequestPushed:   nowNs(),
+			RestRequestReceived: requestReceived,
+			RestRequestPushed:   nowNs(),
 		},
 		Data: Data{
 			Content: content,
@@ -205,26 +225,28 @@ func logHandling(msg *Message) {
 	fmt.Printf("[REST] Handling request_id=%s | content=%q | received_ns=%d\n",
 		msg.RequestID,
 		msg.Data.Content,
-		*msg.Meta.ProxyRequestReceived,
+		*msg.Meta.RestRequestReceived,
 	)
 }
 
 func finalizeResult(msg *Message) *Message {
 	now := time.Now().UnixNano()
-	msg.Meta.ProxyResponsePulled = &now
+	msg.Meta.RestResponsePulled = &now
 
-	// Duration in nanoseconds
-	duration := now - *msg.Meta.ProxyRequestReceived
-	msg.Meta.ProxyRoundtripDurationNs = &duration
+	// Compute and store total roundtrip duration
+	duration := now - *msg.Meta.RestRequestReceived
+	msg.Meta.RoundtripDurationNs = &duration
 
-	// Convert to milliseconds for Prometheus
-	proxyQueueDurationMs.Observe(float64(*msg.Meta.ProxyRequestPushed-*msg.Meta.ProxyRequestReceived) / 1_000_000)
-	workerProcessDurationMs.Observe(float64(*msg.Meta.WorkerResponsePushed-*msg.Meta.ProxyRequestPushed) / 1_000_000)
-	proxyWaitDurationMs.Observe(float64(now-*msg.Meta.WorkerResponsePushed) / 1_000_000)
-	fullCycleDurationMs.Observe(float64(now-*msg.Meta.ProxyRequestReceived) / 1_000_000)
+	// Observe Prometheus histograms (in ms)
+	durationRestRequestToRestPushMs.Observe(float64(*msg.Meta.RestRequestPushed-*msg.Meta.RestRequestReceived) / 1_000_000)
+	durationRestPushToWorkerPullMs.Observe(float64(*msg.Meta.WorkerRequestPulled-*msg.Meta.RestRequestPushed) / 1_000_000)
+	durationWorkerPullToWorkerPushMs.Observe(float64(*msg.Meta.WorkerResponsePushed-*msg.Meta.WorkerRequestPulled) / 1_000_000)
+	durationWorkerPushToRestPullMs.Observe(float64(*msg.Meta.RestResponsePulled-*msg.Meta.WorkerResponsePushed) / 1_000_000)
+	durationRestPullToRestResponseMs.Observe(float64(now-*msg.Meta.RestResponsePulled) / 1_000_000)
+	durationFullCycleMs.Observe(float64(duration) / 1_000_000)
 
-	// success
-	successCounter.Inc()
+	// Mark success
+	counterSuccess.Inc()
 
 	return msg
 }
