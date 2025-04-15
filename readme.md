@@ -282,7 +282,7 @@ Metrics are exposed at the default endpoint: `http://localhost:3000/metrics`
 
 ## Load Testing with JMeter
 
-To evaluate the performance of the Sync-to-Async system under various load levels, use Apache JMeter via CLI in Docker.
+To evaluate the performance of the Sync-to-Async system under various load levels, use Apache JMeter CLI.
 
 It will generate detailed HTML reports and simulate concurrent requests.
 
