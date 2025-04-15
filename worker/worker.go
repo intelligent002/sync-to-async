@@ -3,11 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"strings"
-	"time"
-
 	jsoniter "github.com/json-iterator/go"
 	"github.com/redis/go-redis/v9"
+	"strings"
+	"time"
 )
 
 var (
