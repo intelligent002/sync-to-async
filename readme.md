@@ -21,7 +21,7 @@ all while maintaining a synchronous API surface.
 
 1. **Scalable REST API layer** – Accepts requests and holds client connections while awaiting results.
 2. **Centralized queue** – Stores jobs, supports backpressure, and allows prioritization (in future iterations).
-3. **Workers pool** – Consumes and processes jobs asynchronously, independent of client connections.
+3. **Scalable Workers layer** – Consumes and processes jobs asynchronously, independent of client connections.
 
 ## Benefits
 
