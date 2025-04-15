@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/gofiber/fiber/v2/middleware/adaptor"
-	"github.com/json-iterator/go"
+	jsoniter "github.com/json-iterator/go"
 	"log"
 	"time"
 
@@ -16,8 +16,9 @@ import (
 )
 
 var (
-	ctx = context.Background()
-	rdb *redis.Client
+	ctx  = context.Background()
+	rdb  *redis.Client
+	json = jsoniter.ConfigFastest
 
 	// --- Metrics ---
 
@@ -214,7 +215,7 @@ func prepareMessage(content string, requestReceived int64) *Message {
 }
 
 func pushToQueue(msg *Message) error {
-	payload, err := jsoniter.Marshal(msg)
+	payload, err := json.Marshal(msg)
 	if err != nil {
 		return err
 	}
@@ -229,7 +230,7 @@ func waitForResult(requestId string) (*Message, error) {
 	}
 
 	var msg Message
-	if err := jsoniter.Unmarshal([]byte(result[1]), &msg); err != nil {
+	if err := json.Unmarshal([]byte(result[1]), &msg); err != nil {
 		return nil, err
 	}
 

@@ -3,14 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/json-iterator/go"
 	"strings"
 	"time"
 
+	jsoniter "github.com/json-iterator/go"
 	"github.com/redis/go-redis/v9"
 )
 
-var ctx = context.Background()
+var (
+	ctx  = context.Background()
+	json = jsoniter.ConfigFastest
+)
 
 type Meta struct {
 	RestRequestReceived  int64 `json:"rest_request_received_ns"`
@@ -49,14 +52,14 @@ func main() {
 		}
 
 		var msg Message
-		if err := jsoniter.Unmarshal([]byte(result[1]), &msg); err != nil {
+		if err := json.Unmarshal([]byte(result[1]), &msg); err != nil {
 			fmt.Println("Invalid message:", err)
 			continue
 		}
 
 		msg.Meta.WorkerRequestPulled = nowNs()
 
-		// Process
+		// Simulate processing
 		msg.Data.Content = strings.ToUpper(msg.Data.Content)
 		msg.Data.Result = true
 
@@ -64,7 +67,7 @@ func main() {
 
 		// Redis pipeline: RPush + Expire
 		resultKey := fmt.Sprintf("validate:response:%s", msg.RequestID)
-		payload, _ := jsoniter.Marshal(msg)
+		payload, _ := json.Marshal(msg)
 
 		pipe := rdb.Pipeline()
 		pipe.RPush(ctx, resultKey, payload)
