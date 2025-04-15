@@ -293,28 +293,28 @@ It will generate detailed HTML reports and run concurrent requests for specified
 ### 🐧 Linux / macOS
 
 ```bash
-docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JTHREADS=5  -JDURATION=300 -e -o out-5
-docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JTHREADS=10 -JDURATION=300 -e -o out-10
-docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JTHREADS=20 -JDURATION=300 -e -o out-20
-docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JTHREADS=50 -JDURATION=300 -e -o out-50
+docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-5.jtl  -JHOSTNAME=rest -JTHREADS=5  -JDURATION=300 -e -o out-5
+docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-10.jtl -JHOSTNAME=rest -JTHREADS=10 -JDURATION=300 -e -o out-10
+docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-20.jtl -JHOSTNAME=rest -JTHREADS=20 -JDURATION=300 -e -o out-20
+docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-50.jtl -JHOSTNAME=rest -JTHREADS=50 -JDURATION=300 -e -o out-50
 ```
 
 ### 🖥️ Windows CMD
 
 ```cmd
-docker run --rm --network sync-to-async -v "%cd%\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JTHREADS=5  -JDURATION=300 -e -o out-5
-docker run --rm --network sync-to-async -v "%cd%\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JTHREADS=10 -JDURATION=300 -e -o out-10
-docker run --rm --network sync-to-async -v "%cd%\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JTHREADS=20 -JDURATION=300 -e -o out-20
-docker run --rm --network sync-to-async -v "%cd%\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JTHREADS=50 -JDURATION=300 -e -o out-50
+docker run --rm --network sync-to-async -v "%cd%\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-5.jtl  -JHOSTNAME=rest -JTHREADS=5  -JDURATION=300 -e -o out-5
+docker run --rm --network sync-to-async -v "%cd%\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-10.jtl -JHOSTNAME=rest -JTHREADS=10 -JDURATION=300 -e -o out-10
+docker run --rm --network sync-to-async -v "%cd%\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-20.jtl -JHOSTNAME=rest -JTHREADS=20 -JDURATION=300 -e -o out-20
+docker run --rm --network sync-to-async -v "%cd%\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-50.jtl -JHOSTNAME=rest -JTHREADS=50 -JDURATION=300 -e -o out-50
 ```
 
 ### 💠 Windows PowerShell
 
 ```powershell
-docker run --rm --network sync-to-async -v "${PWD}\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JTHREADS=5  -JDURATION=300 -e -o out-5
-docker run --rm --network sync-to-async -v "${PWD}\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JTHREADS=10 -JDURATION=300 -e -o out-10
-docker run --rm --network sync-to-async -v "${PWD}\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JTHREADS=20 -JDURATION=300 -e -o out-20
-docker run --rm --network sync-to-async -v "${PWD}\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JTHREADS=50 -JDURATION=300 -e -o out-50
+docker run --rm --network sync-to-async -v "${PWD}\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-5.jtl  -JHOSTNAME=rest -JTHREADS=5  -JDURATION=300 -e -o out-5
+docker run --rm --network sync-to-async -v "${PWD}\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-10.jtl -JHOSTNAME=rest -JTHREADS=10 -JDURATION=300 -e -o out-10
+docker run --rm --network sync-to-async -v "${PWD}\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-20.jtl -JHOSTNAME=rest -JTHREADS=20 -JDURATION=300 -e -o out-20
+docker run --rm --network sync-to-async -v "${PWD}\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-50.jtl -JHOSTNAME=rest -JTHREADS=50 -JDURATION=300 -e -o out-50
 ```
 
 ## 🌐 Running from an External Machine
