@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gofiber/fiber/v2/middleware/adaptor"
+	"github.com/json-iterator/go"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -199,7 +200,7 @@ func prepareMessage(content string, requestReceived *int64) *Message {
 }
 
 func pushToQueue(msg *Message) error {
-	payload, err := json.Marshal(msg)
+	payload, err := jsoniter.Marshal(msg)
 	if err != nil {
 		return err
 	}
