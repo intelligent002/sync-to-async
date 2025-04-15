@@ -5,7 +5,7 @@
 This project demonstrates a scalable architectural pattern for REST APIs that return synchronous responses to clients
 while handling processing asynchronously in the background.
 
-It addresses several limitations of traditional worker-based systems with internal buffers:
+This approach addresses several limitations of traditional worker-based systems with internal buffers:
 
 - Long-running tasks block shorter ones (no reordering or prioritization)
 - Worker-local queues limit burst-handling capabilities
@@ -17,7 +17,7 @@ To overcome these issues, this pattern introduces a **centralized queue** betwee
 decouples request handling from processing, allowing elastic scaling, fine-grained control, and robust fault tolerance —
 all while maintaining a synchronous API surface.
 
-### Core Components
+## Core Components
 
 1. **Scalable REST API layer** – Accepts requests and holds client connections while awaiting results.
 2. **Centralized queue** – Stores jobs, supports backpressure, and allows prioritization (in future iterations).
@@ -75,16 +75,16 @@ Each result key has a **TTL** (default: 1 hour) to prevent memory leaks in case 
 > - **RabbitMQ** (`correlation_id`)
 > - **Amazon SQS**, **NATS**, etc.
 
-#### Redis Job Flow
+### Redis Job Flow
 
-| Action               | Redis Command                          | Key Pattern                   |
-|----------------------|----------------------------------------|-------------------------------|
-| Enqueue job          | `RPUSH validate:queue`                 | Shared job queue              |
-| Worker fetch job     | `BLPOP validate:queue`                 | Blocking consumer             |
-| Push result          | `RPUSH validate:response:<request_id>` | One key per request           |
-| REST wait for result | `BLPOP validate:response:<request_id>` | Blocking until worker replies |
+| Action                         | Redis Command                          | Key Pattern                   |
+|--------------------------------|----------------------------------------|-------------------------------|
+| REST service pushes request    | `RPUSH validate:queue`                 | Shared job queue              |
+| Worker service pulls request   | `BLPOP validate:queue`                 | Blocking consumer             |
+| Worker service pushes response | `RPUSH validate:response:<request_id>` | One key per request           |
+| REST service pulls response    | `BLPOP validate:response:<request_id>` | Blocking until worker replies |
 
-## Setup & Deployment
+# Setup & Deployment
 
 ### Requirements
 
@@ -111,7 +111,7 @@ feature is **not supported** in Docker Compose. Swarm also simplifies multi-repl
         port: 3000
 ```
 
-## Deployment Steps
+# Deployment Steps
 
 ### 1. Initialize Docker Swarm
 
@@ -163,38 +163,74 @@ Leave Swarm mode:
   ./swarm-leave.sh
 ```
 
-## Access the Deployment
+# Access the Deployment
 
-Once the stack is deployed, the following services will be available:
-
-| Service    | URL                                            | Description                                            |
-|------------|------------------------------------------------|--------------------------------------------------------|
-| REST API   | [http://localhost:3000](http://localhost:3000) | Main entrypoint for issuing requests to the POC        |
-| Prometheus | [http://localhost:9090](http://localhost:9090) | Metrics collection and query engine                    |
-| Grafana    | [http://localhost:3001](http://localhost:3001) | Metrics dashboard (credentials: `admin / very-secret`) |
-| Traefik    | [http://localhost:8080](http://localhost:8080) | Traefik dashboard and routing debug panel              |
-
-After deployment, let the system settle down for like a minute, then those links should be available:
+> After deployment, allow about a minute for the system to initialize. The following services will then be accessible:
 
 ## Prometheus
 
-[![Prometheus](https://raw.githubusercontent.com/intelligent002/sync-to-async/refs/heads/main/charts/prometheus.png)](http://localhost:3000/)
+* **GUI:** http://localhost:9091
+* **Credentials:** none
+* **Purpose:** scrape metrics from services for further analysis.
+
+[![Prometheus](https://raw.githubusercontent.com/intelligent002/sync-to-async/refs/heads/main/charts/prometheus.png)](http://localhost:9091/)
+
+### Prometheus Configuration
+
+> This setup ensures all REST instances are monitored without needing to enumerate IPs or hardcode targets.
+
+Prometheus is preconfigured to automatically scrape metrics from all REST service replicas using Docker Swarm’s built-in
+DNS-based service discovery. The configuration targets the `tasks.rest` DNS name on port `3000`, ensuring metrics
+collection remains consistent even as containers scale or restart.
+
+The scrape configuration is embedded in `prometheus.yml` and bundled with the deployment, requiring no manual changes.
+
+> 📌 Note: Service discovery is DNS-based, so Prometheus may take a few minutes to detect newly added REST instances
+> during scaling operations.
 
 ## Grafana
 
+* **GUI:** http://localhost:3001
+* **Credentials:** admin / very-secret
+* **Purpose:** renders informative dashboards based on data stored in prometheus.
+
 [![Grafana](https://raw.githubusercontent.com/intelligent002/sync-to-async/refs/heads/main/charts/grafana.png)](http://localhost:3001/)
 
-## Traefik
+### Grafana Dashboard:
+
+A preconfigured Grafana dashboard is included in the deployment and automatically loaded on container startup. It
+visualizes key metrics exposed by the REST service, including request success/failure counts, full roundtrip durations,
+and internal processing stages.
+
+The dashboard is designed to auto-bind to the Prometheus data source using the name `"prometheus"`, avoiding hardcoded
+internal IDs. This ensures compatibility across deployments, even if Prometheus is redeployed and assigned a new
+datasource ID.
+
+> 📌 Note: Grafana performs several internal migrations and provisioning tasks on first startup. Please allow a few
+> minutes for it to fully initialize before accessing the dashboard.
+
+# Traefik
+
+* **GUI:** http://localhost:8080
+* **Credentials:** none
+* **Purpose:** Traefik’s dashboard provides a real-time view of active routes and services.
 
 [![Traefik](https://raw.githubusercontent.com/intelligent002/sync-to-async/refs/heads/main/charts/traefik.png)](http://localhost:8080/)
 
-Example API request:
+Traefik serves as the reverse proxy and load balancer for the `REST` service in this stack. It is deployed in Docker Swarm
+mode and dynamically discovers services based on labels in metadata, requiring no static configuration files.
+
+> 📌 Note: All instances of the scaled REST service will receive their fair share of traffic once Traefik updates its routing table based on Swarm service metadata.
+
+### Example API request:
 
 ```bash
-  curl "http://localhost:3000/validate?content=test"
+  curl "http://localhost:3000/validate?content=balagan"
 ```
 
-Example API response:
+* The service accepts a string input and returns the corresponding uppercase output.
+
+### Example API response:
 
 ```jsonc
 {
@@ -214,17 +250,18 @@ Example API response:
 }
 ```
 
-## Observability
+# Observability
 
-The REST service exposes the following **custom Prometheus metrics**, alongside the **default Go and Fiber runtime metrics** (e.g., goroutines, memory usage, HTTP request durations).
-Metrics are available at the default endpoint: `http://localhost:3000/metrics` 
+The REST service exposes the following **custom Prometheus metrics**, alongside the **default Go and Fiber runtime
+metrics** (e.g., goroutines, memory usage, HTTP request durations).
+Metrics are exposed at the default endpoint: `http://localhost:3000/metrics`
 
 ### Counters
 
-| Metric Name           | Description                                   |
-|-----------------------|-----------------------------------------------|
-| `rest_success_total`  | Total number of successful requests           |
-| `rest_failure_total`  | Total number of failed requests               |
+| Metric Name          | Description                         |
+|----------------------|-------------------------------------|
+| `rest_success_total` | Total number of successful requests |
+| `rest_failure_total` | Total number of failed requests     |
 
 ### Gauges
 
@@ -234,16 +271,16 @@ Metrics are available at the default endpoint: `http://localhost:3000/metrics`
 
 ### Histograms
 
-| Metric Name                               | Description                                                                 |
-|-------------------------------------------|-----------------------------------------------------------------------------|
-| `duration_rest_request_to_queue_push_ms`  | Duration from REST request received to Redis push (REST)                    |
-| `duration_rest_push_to_worker_pull_ms`    | Duration from Redis push (REST) to Redis pull (Worker)                     |
-| `duration_worker_pull_to_worker_push_ms`  | Duration from Redis pull (Worker) to Redis push (Worker)                   |
-| `duration_worker_push_to_rest_pull_ms`    | Duration from Redis push (Worker) to Redis pull (REST)                     |
-| `duration_rest_pull_to_rest_response_ms`  | Duration from Redis pull (REST) to final HTTP response (REST)              |
-| `duration_total_roundtrip_ms`             | Total roundtrip time from REST request to REST response                    |
+| Metric Name                              | Description                                                   |
+|------------------------------------------|---------------------------------------------------------------|
+| `duration_rest_request_to_queue_push_ms` | Duration from HTTP request received to Redis push (REST)      |
+| `duration_rest_push_to_worker_pull_ms`   | Duration from Redis push (REST) to Redis pull (Worker)        |
+| `duration_worker_pull_to_worker_push_ms` | Duration from Redis pull (Worker) to Redis push (Worker)      |
+| `duration_worker_push_to_rest_pull_ms`   | Duration from Redis push (Worker) to Redis pull (REST)        |
+| `duration_rest_pull_to_rest_response_ms` | Duration from Redis pull (REST) to final HTTP response (REST) |
+| `duration_total_roundtrip_ms`            | Total roundtrip time from HTTP request to HTTP response       |
 
-## Limitations and Out-of-Scope Items
+# Limitations and Out-of-Scope Items
 
 This Proof of Concept is focused on demonstrating the core sync-to-async architecture. The following features are
 intentionally omitted:
