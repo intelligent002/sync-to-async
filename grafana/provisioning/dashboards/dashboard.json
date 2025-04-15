@@ -111,7 +111,7 @@
         },
         "tooltip": {
           "hideZeros": false,
-          "mode": "single",
+          "mode": "multi",
           "sort": "none"
         }
       },
@@ -234,7 +234,7 @@
         },
         "tooltip": {
           "hideZeros": false,
-          "mode": "single",
+          "mode": "multi",
           "sort": "none"
         }
       },
@@ -344,7 +344,7 @@
         },
         "tooltip": {
           "hideZeros": false,
-          "mode": "single",
+          "mode": "multi",
           "sort": "none"
         }
       },
@@ -467,7 +467,7 @@
         },
         "tooltip": {
           "hideZeros": false,
-          "mode": "single",
+          "mode": "multi",
           "sort": "none"
         }
       },
@@ -573,7 +573,7 @@
         },
         "tooltip": {
           "hideZeros": false,
-          "mode": "single",
+          "mode": "multi",
           "sort": "none"
         }
       },
@@ -679,7 +679,7 @@
         },
         "tooltip": {
           "hideZeros": false,
-          "mode": "single",
+          "mode": "multi",
           "sort": "none"
         }
       },
@@ -785,7 +785,7 @@
         },
         "tooltip": {
           "hideZeros": false,
-          "mode": "single",
+          "mode": "multi",
           "sort": "none"
         }
       },
@@ -817,18 +817,19 @@
     }
   ],
   "preload": false,
+  "refresh": "30s",
   "schemaVersion": 41,
   "tags": [],
   "templating": {
     "list": []
   },
   "time": {
-    "from": "now-15m",
+    "from": "now-5m",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
   "title": "Rest service",
   "uid": "eeiooeyy5rugwe",
-  "version": 29
+  "version": 47
 }
