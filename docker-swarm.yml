@@ -40,7 +40,7 @@ services:
     networks:
       - sync-to-async
     deploy:
-      replicas: 2
+      replicas: 4
       restart_policy:
         condition: any
 
@@ -62,7 +62,7 @@ services:
     networks:
       - sync-to-async
     deploy:
-      replicas: 2
+      replicas: 4
       restart_policy:
         condition: any
 
