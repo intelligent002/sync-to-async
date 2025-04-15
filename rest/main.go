@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/gofiber/fiber/v2/middleware/adaptor"
 	"github.com/json-iterator/go"
@@ -230,7 +229,7 @@ func waitForResult(requestId string) (*Message, error) {
 	}
 
 	var msg Message
-	if err := json.Unmarshal([]byte(result[1]), &msg); err != nil {
+	if err := jsoniter.Unmarshal([]byte(result[1]), &msg); err != nil {
 		return nil, err
 	}
 

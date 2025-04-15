@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"github.com/json-iterator/go"
 	"strings"
 	"time"
 
@@ -49,7 +49,7 @@ func main() {
 		}
 
 		var msg Message
-		if err := json.Unmarshal([]byte(result[1]), &msg); err != nil {
+		if err := jsoniter.Unmarshal([]byte(result[1]), &msg); err != nil {
 			fmt.Println("Invalid message:", err)
 			continue
 		}
@@ -64,7 +64,7 @@ func main() {
 
 		// Redis pipeline: RPush + Expire
 		resultKey := fmt.Sprintf("validate:response:%s", msg.RequestID)
-		payload, _ := json.Marshal(msg)
+		payload, _ := jsoniter.Marshal(msg)
 
 		pipe := rdb.Pipeline()
 		pipe.RPush(ctx, resultKey, payload)
