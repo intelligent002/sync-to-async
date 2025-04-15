@@ -280,7 +280,7 @@ Metrics are exposed at the default endpoint: `http://localhost:3000/metrics`
 | `duration_rest_pull_to_rest_response_ms` | Duration from Redis pull (REST) to final HTTP response (REST) |
 | `duration_total_roundtrip_ms`            | Total roundtrip time from HTTP request to HTTP response       |
 
-## Load Testing with JMeter
+# Load Testing with JMeter
 
 To evaluate the performance of the Sync-to-Async system under various load levels, use Apache JMeter CLI.
 
