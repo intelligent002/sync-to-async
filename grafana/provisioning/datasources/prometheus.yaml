@@ -4,7 +4,7 @@ datasources:
   - name: "prometheus"
     type: "prometheus"
     access: "proxy"
-    url: "http://prometheus:9091"
+    url: "http://prometheus:9090"
     isDefault: true
     typeLogoUrl: "public/app/plugins/datasource/prometheus/img/prometheus_logo.svg"
     editable: true
