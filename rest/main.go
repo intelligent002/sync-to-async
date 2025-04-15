@@ -140,7 +140,9 @@ func main() {
 		defer ticker.Stop()
 
 		for range ticker.C {
-			length, err := rdb.LLen(ctx, "validate:queue").Result()
+			ctxTimeout, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
+			length, err := rdb.LLen(ctxTimeout, "validate:queue").Result()
+			cancel()
 			if err == nil {
 				gaugeQueued.Set(float64(length))
 			}
