@@ -34,7 +34,7 @@ all while maintaining a synchronous API surface.
 - **QoS-Ready** – Future support for SLA-aware queues and priorities.
 - **Centralized Retry Logic** – Retries managed server-side, not by clients.
 - **Loosely Coupled** – Any service can be upgraded/replaced independently.
-- **Deep Observability** – Latency, throughput, and errors measurable at each stage.
+- **Deep Observability** – Latency, throughput and errors measurable at each stage.
 - **Mixed Workloads** – Lightweight requests can return fast; heavy ones queue.
 - **Simple API** – Clients interact with a traditional REST interface.
 
@@ -46,7 +46,7 @@ all while maintaining a synchronous API surface.
 
 1. **Client** sends a request via **Balancer** to a **REST** instance.
 2. **REST** pushes a job into a **Queue** and waits for a response.
-3. **Worker** pops the job, processes it, and pushes the result to a dedicated queue key.
+3. **Worker** pops the job, processes it and pushes the result to a dedicated queue key.
 4. **REST** receives the result and responds to the **Client**.
 
 > The system is backend-agnostic and supports queue implementations like Redis, Kafka, RabbitMQ, etc.
@@ -116,7 +116,7 @@ feature is **not supported** in Docker Compose. Swarm also simplifies multi-repl
 ### 1. Initialize Docker Swarm
 
 Enabling Docker Swarm mode activates additional orchestration features on your local Docker environment, such as service
-scaling, load balancing, and DNS-based service discovery.
+scaling, load balancing and DNS-based service discovery.
 
 ```bash
   ./swarm-init.sh
@@ -289,4 +289,4 @@ intentionally omitted:
 - **No retry logic** – Failed worker executions are not retried.
 - **No dead-letter queue** – Expired or dropped jobs are not captured for later inspection.
 - **No authentication or rate limiting** – The REST API is open and unauthenticated.
-- **No QoS or priority handling** – Queue prioritization, SLA routing, and autoscaling by metrics.
+- **No QoS or priority handling** – Queue prioritization, SLA routing and autoscaling by metrics.
