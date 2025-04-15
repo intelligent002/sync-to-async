@@ -284,50 +284,49 @@ Metrics are exposed at the default endpoint: `http://localhost:3000/metrics`
 
 To evaluate the performance of the Sync-to-Async system under various load levels, use Apache JMeter CLI.
 
-It will generate detailed HTML reports and simulate concurrent requests.
+It will generate detailed HTML reports and run concurrent requests for specified duration (in seconds).
 
-💡 The provided test plan supports variable substitution: `${HOSTNAME}, ${THREADS},  ${DURATION}.`
+💡 The provided test plan supports variable substitution: `${HOSTNAME}, ${THREADS}, ${DURATION}.`
 
-## Run the tests from the same host where Docker Swarm is running:
+## Running the tests from the same host where Docker Swarm is running:
 
 ### 🐧 Linux / macOS
 
 ```bash
-docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JPORT=3000 -JTHREADS=5  -JDURATION=300 -e -o out-5
-docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JPORT=3000 -JTHREADS=10 -JDURATION=300 -e -o out-10
-docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JPORT=3000 -JTHREADS=20 -JDURATION=300 -e -o out-20
-docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JPORT=3000 -JTHREADS=50 -JDURATION=300 -e -o out-50
+docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JTHREADS=5  -JDURATION=300 -e -o out-5
+docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JTHREADS=10 -JDURATION=300 -e -o out-10
+docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JTHREADS=20 -JDURATION=300 -e -o out-20
+docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JTHREADS=50 -JDURATION=300 -e -o out-50
 ```
 
-### 🪟 Windows CMD
+### 🖥️ Windows CMD
 
 ```cmd
-docker run --rm --network sync-to-async -v "%cd%\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JPORT=3000 -JTHREADS=5  -JDURATION=300 -e -o out-5
-docker run --rm --network sync-to-async -v "%cd%\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JPORT=3000 -JTHREADS=10 -JDURATION=300 -e -o out-10
-docker run --rm --network sync-to-async -v "%cd%\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JPORT=3000 -JTHREADS=20 -JDURATION=300 -e -o out-20
-docker run --rm --network sync-to-async -v "%cd%\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JPORT=3000 -JTHREADS=50 -JDURATION=300 -e -o out-50
+docker run --rm --network sync-to-async -v "%cd%\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JTHREADS=5  -JDURATION=300 -e -o out-5
+docker run --rm --network sync-to-async -v "%cd%\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JTHREADS=10 -JDURATION=300 -e -o out-10
+docker run --rm --network sync-to-async -v "%cd%\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JTHREADS=20 -JDURATION=300 -e -o out-20
+docker run --rm --network sync-to-async -v "%cd%\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JTHREADS=50 -JDURATION=300 -e -o out-50
 ```
 
 ### 💠 Windows PowerShell
 
 ```powershell
-docker run --rm --network sync-to-async -v "${PWD}\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JPORT=3000 -JTHREADS=5  -JDURATION=60 -e -o out-5
-docker run --rm --network sync-to-async -v "${PWD}\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JPORT=3000 -JTHREADS=10 -JDURATION=60 -e -o out-10
-docker run --rm --network sync-to-async -v "${PWD}\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JPORT=3000 -JTHREADS=20 -JDURATION=60 -e -o out-20
-docker run --rm --network sync-to-async -v "${PWD}\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JPORT=3000 -JTHREADS=50 -JDURATION=60 -e -o out-50
+docker run --rm --network sync-to-async -v "${PWD}\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JTHREADS=5  -JDURATION=300 -e -o out-5
+docker run --rm --network sync-to-async -v "${PWD}\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JTHREADS=10 -JDURATION=300 -e -o out-10
+docker run --rm --network sync-to-async -v "${PWD}\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JTHREADS=20 -JDURATION=300 -e -o out-20
+docker run --rm --network sync-to-async -v "${PWD}\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JTHREADS=50 -JDURATION=300 -e -o out-50
 ```
 
 ## 🌐 Running from an External Machine
 
-If you want to load test the REST service from a different host (not in the Docker Swarm network), you must:
+If you want to load test the REST service from a different host (not in the Docker Swarm network):
 
-Use the external IP or DNS name of the REST host.
-Replace HOSTNAME with that external address.
+> To use the external IP or DNS name of the REST host, replace HOSTNAME with that external address.
 
-Example (Linux/macOS from external machine):
+### Example (Linux/macOS from external machine):
 
 ```bash
-docker run --rm -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=192.168.1.100 -JPORT=3000 -JTHREADS=10 -JDURATION=300 -e -o out-external
+docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=192.168.100.25 -JTHREADS=5 -JDURATION=300 -e -o out-5
 ```
 
 🔒 Ensure firewall rules are correctly configured to allow access from outside.
