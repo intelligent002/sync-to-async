@@ -280,6 +280,58 @@ Metrics are exposed at the default endpoint: `http://localhost:3000/metrics`
 | `duration_rest_pull_to_rest_response_ms` | Duration from Redis pull (REST) to final HTTP response (REST) |
 | `duration_total_roundtrip_ms`            | Total roundtrip time from HTTP request to HTTP response       |
 
+## Load Testing with JMeter
+
+To evaluate the performance of the Sync-to-Async system under various load levels, use Apache JMeter via CLI in Docker.
+
+It will generate detailed HTML reports and simulate concurrent requests.
+
+💡 The provided test plan supports variable substitution: `${HOSTNAME}, ${THREADS},  ${DURATION}.`
+
+## Run the tests from the same host where Docker Swarm is running:
+
+### 🐧 Linux / macOS
+
+```bash
+docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JPORT=3000 -JTHREADS=5  -JDURATION=300 -e -o out-5
+docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JPORT=3000 -JTHREADS=10 -JDURATION=300 -e -o out-10
+docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JPORT=3000 -JTHREADS=20 -JDURATION=300 -e -o out-20
+docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JPORT=3000 -JTHREADS=50 -JDURATION=300 -e -o out-50
+```
+
+### 🪟 Windows CMD
+
+```cmd
+docker run --rm --network sync-to-async -v "%cd%\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JPORT=3000 -JTHREADS=5  -JDURATION=300 -e -o out-5
+docker run --rm --network sync-to-async -v "%cd%\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JPORT=3000 -JTHREADS=10 -JDURATION=300 -e -o out-10
+docker run --rm --network sync-to-async -v "%cd%\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JPORT=3000 -JTHREADS=20 -JDURATION=300 -e -o out-20
+docker run --rm --network sync-to-async -v "%cd%\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JPORT=3000 -JTHREADS=50 -JDURATION=300 -e -o out-50
+```
+
+### 💠 Windows PowerShell
+
+```powershell
+docker run --rm --network sync-to-async -v "${PWD}\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JPORT=3000 -JTHREADS=5  -JDURATION=60 -e -o out-5
+docker run --rm --network sync-to-async -v "${PWD}\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JPORT=3000 -JTHREADS=10 -JDURATION=60 -e -o out-10
+docker run --rm --network sync-to-async -v "${PWD}\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JPORT=3000 -JTHREADS=20 -JDURATION=60 -e -o out-20
+docker run --rm --network sync-to-async -v "${PWD}\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=rest -JPORT=3000 -JTHREADS=50 -JDURATION=60 -e -o out-50
+```
+
+## 🌐 Running from an External Machine
+
+If you want to load test the REST service from a different host (not in the Docker Swarm network), you must:
+
+Use the external IP or DNS name of the REST host.
+Replace HOSTNAME with that external address.
+
+Example (Linux/macOS from external machine):
+
+```bash
+docker run --rm -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=192.168.1.100 -JPORT=3000 -JTHREADS=10 -JDURATION=300 -e -o out-external
+```
+
+🔒 Ensure firewall rules are correctly configured to allow access from outside.
+
 # Limitations and Out-of-Scope Items
 
 This Proof of Concept is focused on demonstrating the core sync-to-async architecture. The following features are
