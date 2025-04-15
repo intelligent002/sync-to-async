@@ -12,8 +12,6 @@ import (
 
 var ctx = context.Background()
 
-// --- Structures aligned with REST service ---
-
 type Meta struct {
 	RestRequestReceived  int64 `json:"rest_request_received_ns"`
 	RestRequestPushed    int64 `json:"rest_request_pushed_ns"`
@@ -44,7 +42,6 @@ func main() {
 	})
 
 	for {
-		// Blocking pop from validation queue
 		result, err := rdb.BLPop(ctx, 0, "validate:queue").Result()
 		if err != nil {
 			fmt.Println("Queue error:", err)
@@ -57,26 +54,25 @@ func main() {
 			continue
 		}
 
-		// Set worker pull timestamp
 		msg.Meta.WorkerRequestPulled = nowNs()
 
-		// Simulate processing
+		// Process
 		msg.Data.Content = strings.ToUpper(msg.Data.Content)
 		msg.Data.Result = true
 
-		// Set worker push timestamp
 		msg.Meta.WorkerResponsePushed = nowNs()
 
-		// Push result to response queue with 1-hour expiration
+		// Redis pipeline: RPush + Expire
 		resultKey := fmt.Sprintf("validate:response:%s", msg.RequestID)
-		serialized, _ := json.Marshal(msg)
+		payload, _ := json.Marshal(msg)
 
-		if err := rdb.RPush(ctx, resultKey, serialized).Err(); err != nil {
-			fmt.Println("Failed to push result:", err)
+		pipe := rdb.Pipeline()
+		pipe.RPush(ctx, resultKey, payload)
+		pipe.Expire(ctx, resultKey, time.Hour)
+		if _, err := pipe.Exec(ctx); err != nil {
+			fmt.Println("Pipeline push failed:", err)
 			continue
 		}
-
-		rdb.Expire(ctx, resultKey, time.Hour)
 
 		fmt.Println("Processed:", msg.RequestID)
 	}
