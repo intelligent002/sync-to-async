@@ -2,7 +2,8 @@
 
 ## Purpose – Proof of Concept
 
-This project demonstrates a scalable architectural pattern for REST APIs that return synchronous responses to clients while handling processing asynchronously in the background.
+This project demonstrates a scalable architectural pattern for REST APIs that return synchronous responses to clients
+while handling processing asynchronously in the background.
 
 It addresses several limitations of traditional worker-based systems with internal buffers:
 
@@ -12,7 +13,9 @@ It addresses several limitations of traditional worker-based systems with intern
 - Centralized QoS, SLA-aware routing, and retries are impractical
 - Observability is fragmented and debugging becomes harder
 
-To overcome these issues, this pattern introduces a **centralized queue** between the REST layer and workers. This decouples request handling from processing, allowing elastic scaling, fine-grained control, and robust fault tolerance — all while maintaining a synchronous API surface.
+To overcome these issues, this pattern introduces a **centralized queue** between the REST layer and workers. This
+decouples request handling from processing, allowing elastic scaling, fine-grained control, and robust fault tolerance —
+all while maintaining a synchronous API surface.
 
 ### Core Components
 
@@ -52,7 +55,9 @@ To overcome these issues, this pattern introduces a **centralized queue** betwee
 
 ### REST API – Go
 
-The REST service is built in **Go**, utilizing goroutines and non-blocking I/O to efficiently hold thousands of simultaneous connections. This enables REST instances to serve as "connection waiters" while the actual work is offloaded.
+The REST service is built in **Go**, utilizing goroutines and non-blocking I/O to efficiently hold thousands of
+simultaneous connections. This enables REST instances to serve as "connection waiters" while the actual work is
+offloaded.
 
 ### Queue – Redis
 
@@ -85,22 +90,23 @@ Each result key has a **TTL** (default: 1 hour) to prevent memory leaks in case 
 
 - Docker + Docker Swarm
 - Internet access to pull docker base images:
-  - `traefik:v3.3` – used as the reverse proxy and load balancer
-  - `golang:1.24.2-alpine3.21` – for building the REST and Worker services
-  - `redis:7` – used as the message queue
-  - `prom/prometheus:v2.53.4` – metrics collection
-  - `grafana/grafana:11.6.0` – metrics visualization
+    - `traefik:v3.3` – used as the reverse proxy and load balancer
+    - `golang:1.24.2-alpine3.21` – for building the REST and Worker services
+    - `redis:7` – used as the message queue
+    - `prom/prometheus:v2.53.4` – metrics collection
+    - `grafana/grafana:11.6.0` – metrics visualization
 
 ### Why Docker Swarm?
 
-Prometheus requires **DNS-based service discovery** (e.g. `tasks.rest`) to scrape metrics from all REST replicas. This feature is **not supported** in Docker Compose. Swarm also simplifies multi-replica networking and Traefik routing.
+Prometheus requires **DNS-based service discovery** (e.g. `tasks.rest`) to scrape metrics from all REST replicas. This
+feature is **not supported** in Docker Compose. Swarm also simplifies multi-replica networking and Traefik routing.
 
 #### Prometheus config snippet:
 
 ```yaml
   - job_name: 'rest'
     dns_sd_configs:
-      - names: ['tasks.rest']
+      - names: [ 'tasks.rest' ]
         type: A
         port: 3000
 ```
@@ -108,19 +114,28 @@ Prometheus requires **DNS-based service discovery** (e.g. `tasks.rest`) to scrap
 ## Deployment Steps
 
 ### 1. Initialize Docker Swarm
-Enabling Docker Swarm mode activates additional orchestration features on your local Docker environment, such as service scaling, load balancing, and DNS-based service discovery.
+
+Enabling Docker Swarm mode activates additional orchestration features on your local Docker environment, such as service
+scaling, load balancing, and DNS-based service discovery.
+
 ```bash
   ./swarm-init.sh
 ```
 
 ### 2. Create the external network
-The external overlay network is created once and reused. This is to avoid issues from Docker’s async network operations, such as race conditions or leftover resources.
+
+The external overlay network is created once and reused. This is to avoid issues from Docker’s async network operations,
+such as race conditions or leftover resources.
+
 ```bash
   ./network-create.sh
 ```
 
 ### 3. Build & Deploy
-After making changes to the source code (e.g. REST or Worker services), you can rebuild and redeploy the updated containers using:
+
+After making changes to the source code (e.g. REST or Worker services), you can rebuild and redeploy the updated
+containers using:
+
 ```bash
   ./containers-build.sh
   ./stack-deploy.sh
@@ -131,16 +146,19 @@ After making changes to the source code (e.g. REST or Worker services), you can 
 To fully reset the environment or free up space from unused resources:
 
 Remove the stack:
+
 ```bash
   ./stack-remove.sh
 ```
 
 Remove the network:
+
 ```bash
   ./network-remove.sh
 ```
 
 Leave Swarm mode:
+
 ```bash
   ./swarm-leave.sh
 ```
@@ -155,6 +173,18 @@ Once the stack is deployed, the following services will be available:
 | Prometheus | [http://localhost:9090](http://localhost:9090) | Metrics collection and query engine                    |
 | Grafana    | [http://localhost:3001](http://localhost:3001) | Metrics dashboard (credentials: `admin / very-secret`) |
 | Traefik    | [http://localhost:8080](http://localhost:8080) | Traefik dashboard and routing debug panel              |
+
+After deployment, let the system settle down for like a minute, then those links should be available: 
+
+## Prometheus
+![Prometheus](https://raw.githubusercontent.com/intelligent002/sync-to-async/refs/heads/main/charts/prometheus.png)(http://localhost:9090/)
+
+## Grafana
+![Grafana](https://raw.githubusercontent.com/intelligent002/sync-to-async/refs/heads/main/charts/grafana.png)(http://localhost:3001/)
+
+## Traefik
+![Traefik](https://raw.githubusercontent.com/intelligent002/sync-to-async/refs/heads/main/charts/traefik.png)(http://localhost:8080/)
+
 
 Example API request:
 
@@ -184,7 +214,8 @@ Example API response:
 
 ## Limitations and Out-of-Scope Items
 
-This Proof of Concept is focused on demonstrating the core sync-to-async architecture. The following features are intentionally omitted:
+This Proof of Concept is focused on demonstrating the core sync-to-async architecture. The following features are
+intentionally omitted:
 
 - **Redis is used in standalone mode** – No clustering, replication, or high-availability setup.
 - **No retry logic** – Failed worker executions are not retried.
