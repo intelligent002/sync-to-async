@@ -1,3 +1,5 @@
+# Sync-to-Async - Proof of Concept
+
 This project demonstrates a scalable architectural pattern for REST APIs that return synchronous responses to clients
 while handling processing asynchronously in the background.
 
