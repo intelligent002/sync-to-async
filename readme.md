@@ -217,10 +217,12 @@ datasource ID.
 
 [![Traefik](https://raw.githubusercontent.com/intelligent002/sync-to-async/refs/heads/main/charts/traefik.png)](http://localhost:8080/)
 
-Traefik serves as the reverse proxy and load balancer for the `REST` service in this stack. It is deployed in Docker Swarm
+Traefik serves as the reverse proxy and load balancer for the `REST` service in this stack. It is deployed in Docker
+Swarm
 mode and dynamically discovers services based on labels in metadata, requiring no static configuration files.
 
-> 📌 Note: All instances of the scaled REST service will receive their fair share of traffic once Traefik updates its routing table based on Swarm service metadata.
+> 📌 Note: All instances of the scaled REST service will receive their fair share of traffic once Traefik updates its
+> routing table based on Swarm service metadata.
 
 ### Example API request:
 
@@ -282,9 +284,11 @@ Metrics are exposed at the default endpoint: `http://localhost:3000/metrics`
 
 # Load Testing with JMeter
 
+![Apache JMeter](https://raw.githubusercontent.com/intelligent002/sync-to-async/refs/heads/main/charts/jmeter-50.png)
+
 To evaluate the performance of the Sync-to-Async system under various load levels, use Apache JMeter CLI.
 
-It will generate detailed HTML reports and run concurrent requests for specified duration (in seconds).
+It will generate detailed HTML reports and run concurrent requests for specified duration.
 
 💡 The provided test plan supports variable substitution: `${HOSTNAME}, ${THREADS}, ${DURATION}.`
 
@@ -293,18 +297,24 @@ It will generate detailed HTML reports and run concurrent requests for specified
 ### 🐧 Linux / macOS
 
 ```bash
-docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-5.jtl  -JHOSTNAME=rest -JTHREADS=5  -JDURATION=300 -e -o out-5
-docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-10.jtl -JHOSTNAME=rest -JTHREADS=10 -JDURATION=300 -e -o out-10
-docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-20.jtl -JHOSTNAME=rest -JTHREADS=20 -JDURATION=300 -e -o out-20
-docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-50.jtl -JHOSTNAME=rest -JTHREADS=50 -JDURATION=300 -e -o out-50
+docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-5.jtl  -JHOSTNAME=rest -JTHREADS=5  -JDURATION=300 -e -o out-5;
+sleep 300;
+docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-10.jtl -JHOSTNAME=rest -JTHREADS=10 -JDURATION=300 -e -o out-10;
+sleep 300;
+docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-20.jtl -JHOSTNAME=rest -JTHREADS=20 -JDURATION=300 -e -o out-20;
+sleep 300;
+docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-50.jtl -JHOSTNAME=rest -JTHREADS=50 -JDURATION=300 -e -o out-50;
 ```
 
 ### 🖥️ Windows CMD
 
 ```cmd
-docker run --rm --network sync-to-async -v "%cd%\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-5.jtl  -JHOSTNAME=rest -JTHREADS=5  -JDURATION=300 -e -o out-5
-docker run --rm --network sync-to-async -v "%cd%\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-10.jtl -JHOSTNAME=rest -JTHREADS=10 -JDURATION=300 -e -o out-10
-docker run --rm --network sync-to-async -v "%cd%\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-20.jtl -JHOSTNAME=rest -JTHREADS=20 -JDURATION=300 -e -o out-20
+docker run --rm --network sync-to-async -v "%cd%\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-5.jtl  -JHOSTNAME=rest -JTHREADS=5  -JDURATION=300 -e -o out-5 
+timeout /t 300 >null
+docker run --rm --network sync-to-async -v "%cd%\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-10.jtl -JHOSTNAME=rest -JTHREADS=10 -JDURATION=300 -e -o out-10 
+timeout /t 300 >null
+docker run --rm --network sync-to-async -v "%cd%\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-20.jtl -JHOSTNAME=rest -JTHREADS=20 -JDURATION=300 -e -o out-20 
+timeout /t 300 >null
 docker run --rm --network sync-to-async -v "%cd%\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-50.jtl -JHOSTNAME=rest -JTHREADS=50 -JDURATION=300 -e -o out-50
 ```
 
@@ -312,8 +322,11 @@ docker run --rm --network sync-to-async -v "%cd%\jmeter:/jmeter" -w /jmeter just
 
 ```powershell
 docker run --rm --network sync-to-async -v "${PWD}\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-5.jtl  -JHOSTNAME=rest -JTHREADS=5  -JDURATION=300 -e -o out-5
+Start-Sleep -Seconds 300
 docker run --rm --network sync-to-async -v "${PWD}\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-10.jtl -JHOSTNAME=rest -JTHREADS=10 -JDURATION=300 -e -o out-10
+Start-Sleep -Seconds 300
 docker run --rm --network sync-to-async -v "${PWD}\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-20.jtl -JHOSTNAME=rest -JTHREADS=20 -JDURATION=300 -e -o out-20
+Start-Sleep -Seconds 300
 docker run --rm --network sync-to-async -v "${PWD}\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-50.jtl -JHOSTNAME=rest -JTHREADS=50 -JDURATION=300 -e -o out-50
 ```
 
@@ -326,7 +339,7 @@ If you want to load test the REST service from a different host (not in the Dock
 ### Example (Linux/macOS from external machine):
 
 ```bash
-docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results.jtl -JHOSTNAME=192.168.100.25 -JTHREADS=5 -JDURATION=300 -e -o out-5
+docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-5.jtl -JHOSTNAME=192.168.100.25 -JTHREADS=5  -JDURATION=300 -e -o out-5
 ```
 
 🔒 Ensure firewall rules are correctly configured to allow access from outside.
