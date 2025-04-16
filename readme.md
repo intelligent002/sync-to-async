@@ -339,7 +339,7 @@ If you want to load test the REST service from a different host (not in the Dock
 ### Example (Linux/macOS from external machine):
 
 ```bash
-docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-5.jtl -JHOSTNAME=192.168.100.25 -JTHREADS=5  -JDURATION=300 -e -o out-5
+docker run --rm --network sync-to-async -v "${PWD}/jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-5.jtl -JHOSTNAME=192.168.100.25 -JTHREADS=5 -JDURATION=300 -e -o out-5
 ```
 
 🔒 Ensure firewall rules are correctly configured to allow access from outside.
