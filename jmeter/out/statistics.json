@@ -1,0 +1,34 @@
+{
+  "Total" : {
+    "transaction" : "Total",
+    "sampleCount" : 1408577,
+    "errorCount" : 0,
+    "errorPct" : 0.0,
+    "meanResTime" : 7.582098813199309,
+    "medianResTime" : 7.0,
+    "minResTime" : 0.0,
+    "maxResTime" : 170.0,
+    "pct1ResTime" : 15.0,
+    "pct2ResTime" : 18.0,
+    "pct3ResTime" : 24.0,
+    "throughput" : 4700.082084273186,
+    "receivedKBytesPerSec" : 2221.459096443182,
+    "sentKBytesPerSec" : 780.2870647719158
+  },
+  "REST Proxy Call" : {
+    "transaction" : "REST Proxy Call",
+    "sampleCount" : 1408577,
+    "errorCount" : 0,
+    "errorPct" : 0.0,
+    "meanResTime" : 7.582098813199309,
+    "medianResTime" : 7.0,
+    "minResTime" : 0.0,
+    "maxResTime" : 170.0,
+    "pct1ResTime" : 15.0,
+    "pct2ResTime" : 18.0,
+    "pct3ResTime" : 24.0,
+    "throughput" : 4700.082084273186,
+    "receivedKBytesPerSec" : 2221.459096443182,
+    "sentKBytesPerSec" : 780.2870647719158
+  }
+}
