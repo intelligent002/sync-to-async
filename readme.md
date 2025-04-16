@@ -330,7 +330,7 @@ Start-Sleep -Seconds 300
 docker run --rm --network sync-to-async -v "${PWD}\jmeter:/jmeter" -w /jmeter justb4/jmeter -n -t test.jmx -l results-50.jtl -JHOSTNAME=rest -JTHREADS=50 -JDURATION=300 -e -o out-50
 ```
 
-## 🌐 Running from an External Machine
+## 🌐 Offloading test execution to an external machine to isolate load:
 
 If you want to load test the REST service from a different host (not in the Docker Swarm network):
 
