@@ -125,7 +125,7 @@ func main() {
 	prometheus.MustRegister(
 		counterSuccess,                   // Operation success counters
 		counterFailure,                   // Operation failed counters
-		gaugeQueued,                      // Unreliable counter of queued requests (may fail on errors)
+		gaugeQueued,                      // Queue size gauge, updated every 30s. Similar across replicas.
 		durationRestRequestToRestPushMs,  // From REST request receive → Redis push (by REST)
 		durationRestPushToWorkerPullMs,   // From Redis push (REST) → Redis pull (Worker)
 		durationWorkerPullToWorkerPushMs, // From Redis pull (Worker) → Redis push (Worker)
